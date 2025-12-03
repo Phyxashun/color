@@ -1,0 +1,19 @@
+{
+  "name": "color",
+  "version": "0.1.0",
+  "description": "HTML canvas color library with CSS color string parsing.",
+  "license": "MIT",
+  "author": "Dustin R. Dew",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/typescript": "^0.4.29",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}

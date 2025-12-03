@@ -1,0 +1,48 @@
+{
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
+        // File Layout
+        "rootDir": "/",
+        "outDir": "./dist",
+        // Environment Settings
+        "module": "esnext",
+        "target": "esnext",
+        "types": [
+            "node"
+        ],
+        "allowImportingTsExtensions": true,
+        "rewriteRelativeImportExtensions": true,
+        // Other Outputs
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        // Stricter Typechecking Options
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        // Style Options
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        // Recommended Options
+        "strict": true,
+        "jsx": "react-jsx",
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "noUncheckedSideEffectImports": true,
+        "moduleDetection": "force",
+        "skipLibCheck": true,
+        "esModuleInterop": true
+    },
+    "include": [
+        "src",
+        "src/**/*.ts",
+        "./globals.d.ts",
+        "./index.ts"
+    ],
+    "exclude": [
+        ".vscode",
+        "node_modules",
+        "test",
+        ".gitignore"
+    ]
+}
