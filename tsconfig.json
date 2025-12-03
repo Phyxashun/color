@@ -2,14 +2,11 @@
     // Visit https://aka.ms/tsconfig to read more about this file
     "compilerOptions": {
         // File Layout
-        "rootDir": "/",
+        "rootDir": "./",
         "outDir": "./dist",
         // Environment Settings
         "module": "esnext",
         "target": "esnext",
-        "types": [
-            "node"
-        ],
         "allowImportingTsExtensions": true,
         "rewriteRelativeImportExtensions": true,
         // Other Outputs
@@ -17,7 +14,6 @@
         "declaration": true,
         "declarationMap": true,
         // Stricter Typechecking Options
-        "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         // Style Options
         "noUnusedLocals": true,
@@ -30,18 +26,21 @@
         "isolatedModules": true,
         "noUncheckedSideEffectImports": true,
         "moduleDetection": "force",
-        "skipLibCheck": true,
+        "skipLibCheck": false,
         "esModuleInterop": true
     },
     "include": [
-        "src",
-        "src/**/*.ts",
+        "./",
+        "./index.ts",
         "./globals.d.ts",
-        "./index.ts"
+        "src/**/*.ts",
+        "src/types/**/*.d.ts",
+        "globals.d.ts"
     ],
     "exclude": [
         ".vscode",
         "node_modules",
+        "dist",
         "test",
         ".gitignore"
     ]

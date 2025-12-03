@@ -1,11 +1,21 @@
 {
   "name": "color",
   "version": "0.1.0",
-  "description": "HTML canvas color library with CSS color string parsing.",
+  "description": "HTML color library and CSS color string lexer/parser.",
+  "keywords": [
+    "html",
+    "canvas",
+    "color",
+    "css",
+    "lexer",
+    "parser",
+    "typescript",
+    "javascript"
+  ],
   "license": "MIT",
-  "author": "Dustin R. Dew",
+  "author": "Dustin R. Dew email: phyxashun@gmail.com",
   "type": "module",
-  "main": "index.ts",
+  "main": "./index.ts",
   "scripts": {
     "test": "vitest"
   },

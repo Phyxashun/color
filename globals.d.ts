@@ -1,13 +1,59 @@
-//global.d.ts
+// globals.d.ts
 
-declare class Color { }
+declare enum TokenType {
+    FUNCTION = 'FUNCTION',          // 'rgba', 'rgb', 'hsl', etc.
+    IDENTIFIER = 'IDENTIFIER',      // Any word/letter not already captured 
+    HEXSTRING = 'HEXSTRING',        // '#fff', '#ffff', '#ffffff', '#ffffffff'
+    NUMBER = 'NUMBER',              // '127', '120', '80'
+    PERCENTAGE = 'PERCENTAGE',      // '80%'
+    COMMA = 'COMMA',                // ',' (for older syntax)
+    SLASH = 'SLASH',                // '/' (for modern syntax)
+    OPEN_PAREN = 'OPEN_PAREN',      // '('
+    CLOSE_PAREN = 'CLOSE_PAREN',    // ')'
+    DELIMITER = 'DELIMITER',        // Any delimiter not already captured
+    WHITESPACE = 'WHITESPACE',      // ' '
+    CHAR = 'CHAR',                  // Any single character not already captured
+    EOL = 'EOL'                     // End of line/string
+}
 
-declare const NamedColors: Record<string, string>;
+declare interface Token {
+    type: TokenType;
+    value: string;
+}
 
-type HexColorMap = Record<string, HexValue>;
+declare type HexColor = `#${string}`;
+declare type HexColorMap = Record<string, HexColor>;
 
-type HexValue = `#${string}`;
+// Define the basic structure of the AST nodes
+interface NumericLiteralNode {
+    type: 'numericLiteral';
+    value: string; // The raw number string
+    unit: string;  // e.g., '%', 'px', or ''
+    channel?: 'red' | 'green' | 'blue' | 'alpha'; // Optional semantic label
+}
 
+interface OperatorNode {
+    type: 'operator';
+    value: ',' | '/'; // Comma or Slash separator
+}
+
+type ValueNode = NumericLiteralNode | OperatorNode;
+
+interface FunctionNode {
+    type: 'function';
+    value: 'rgb' | 'rgba'; // Function name
+    nodes: ValueNode[]; // Array of arguments/operators
+}
+
+type AST = FunctionNode;
+
+type ASTNode = {
+    type: string;
+    value: string;
+    nodes?: ASTNode[]
+};
+
+/*
 type ColorName = keyof typeof NamedColors;
 
 type ColorMap = Record<ColorName, Color>;
@@ -39,14 +85,7 @@ type ColorLike = IColor | string | ArrayLike<number> | number | Record<string, a
 type ColorJson = { model: string; color: number[]; alpha: number };
 type ColorObject = { alpha?: number | undefined } & Record<string, number>;
 
-type TokenType =
-    | 'HEXVALUE'
-    | 'IDENTIFIER'
-    | 'NUMBER'
-    | 'PERCENTAGE'
-    | 'DELIMITER'
-    | 'CHAR'
-    | 'WHITESPACE';
+
 
 interface Token {
     type: TokenType;
@@ -109,3 +148,4 @@ interface IParsedColor extends TParsedColor { }
 
 // A helper utility type to calculate the length of a string literal type T
 type LengthOfStringLiteral<T extends string> = T['length'];
+*/

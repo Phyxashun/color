@@ -159,4 +159,78 @@ const Colors: HexColorMap = {
     yellowgreen: '#9acd32'
 } as const;
 
+export const CC = {
+    reset: '\x1b[0m',
+    bright: '\x1b[1m',
+    dim: '\x1b[2m',
+    underline: '\x1b[4m',
+    blink: '\x1b[5m',
+    reverse: '\x1b[7m',
+    hidden: '\x1b[8m',
+
+    black: '\x1b[30m',
+    red: '\x1b[31m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    blue: '\x1b[34m',
+    magenta: '\x1b[35m',
+    cyan: '\x1b[36m',
+    white: '\x1b[37m',
+
+    bgblack: '\x1b[40m',
+    bgred: '\x1b[41m',
+    bggreen: '\x1b[42m',
+    bgyellow: '\x1b[43m',
+    bgblue: '\x1b[44m',
+    bgmagenta: '\x1b[45m',
+    bgcyan: '\x1b[46m',
+    bgwhite: '\x1b[47m',
+} as const;
+
 export default Colors;
+
+
+// --- Usage ---
+/*
+type FixedLengthString<L extends number> = string & { readonly length: L };
+
+function isFixedLengthString<L extends number>(s: string, length: L): s is FixedLengthString<L> {
+    return s.length === length;
+}
+
+function setHexColor(hex: string): HexColor | never {
+    const color = hex.slice(1);
+    console.log("hex argument:", hex, "hex length:", hex.length);
+    console.log("color argument:", color, "color length:", color.length, '\n');
+    if (
+        isFixedLengthString(color, 3) ||
+        isFixedLengthString(color, 4) ||
+        isFixedLengthString(color, 6) ||
+        isFixedLengthString(color, 8)
+    ) {
+        console.log("Validated color:", color);
+        return `#${color}` as HexColor;
+    } else {
+        console.error("Error: Color must be exactly 3 characters long.");
+        throw new Error("Invalid length");
+    }
+}
+
+type Hex3 = `${FixedLengthString<3>}`;
+type Hex4 = `${FixedLengthString<4>}`;
+type Hex6 = `${FixedLengthString<6>}`;
+type Hex8 = `${FixedLengthString<8>}`;
+
+type HexColor = Hex3 | Hex4 | Hex6 | Hex8;
+
+const colorValid3: HexColor = setHexColor('#FFF');
+const colorValid4: HexColor = setHexColor('#ffff');
+const colorValid6: HexColor = setHexColor('#ffffff');
+const colorValid8: HexColor = setHexColor('#ffffffff');
+
+
+console.log("color:", colorValid3);
+console.log("color:", colorValid4);
+console.log("color:", colorValid6);
+console.log("color:", colorValid8);
+*/

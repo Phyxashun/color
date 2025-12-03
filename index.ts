@@ -1,7 +1,8 @@
-/// <reference path='globals.d.ts' />
+/// <reference types='./globals.d.ts' />
 
-import Color from "./src/Color.ts";
-//import Colors from "./src/Colors.ts";
+import Tokenizer from "./src/Tokenizer.ts";
+//import Color from "./Color.ts";
+//import Colors from "./Colors.ts";
 
 export const test = [
 
@@ -95,13 +96,15 @@ lab(50%, -20, 30)
 */
 
 // Should not work
-export const wrong1 = new Color('invalidcolor');
+export const wrong1 = new Tokenizer('invalidcolor');
 
 // Too short hex value
-export const wrong2 = new Color('#ff');
+//export const wrong2 = new Color('#ff');
 
 // Out of range
-export const wrong3 = new Color('rgb(256, 0, 0)');
+//export const wrong3 = new Color('rgb(256, 0, 0)');
 
 // Non-numeric
-export const wrong4 = new Color('rgb(a, b, c)');
+//export const wrong4 = new Color('rgb(a, b, c)');
+
+

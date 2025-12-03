@@ -268,4 +268,3 @@ export default class Color {
         return this.getLuminance() < threshold;
     }
 }
-
