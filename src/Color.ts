@@ -61,12 +61,12 @@ export default class Color {
     }
 
     #parseInput(args: any[]) {
-        const parsedInput = new ColorParser(...args);
-        if (__DEBUG__) console.log("DEBUG: COLOR TOKENS:", parsedInput.tokens);
-        if (__DEBUG__) console.log("DEBUG: COLOR COLOR:", parsedInput.color);
+        this.parsed = new ColorParser(...args);
 
-        if (parsedInput.tokens && parsedInput.color) {
-            this.parsed = { tokens: parsedInput.tokens, color: parsedInput.color };
+
+        if (this.parsed.tokens && this.parsed.color) {
+            if (__DEBUG__) console.log("DEBUG: COLOR TOKENS:", this.parsed.tokens);
+            if (__DEBUG__) console.log("DEBUG: COLOR COLOR:", this.parsed.color);
             this.r = this.parsed.color.r;
             this.g = this.parsed.color.g;
             this.b = this.parsed.color.b;

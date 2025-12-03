@@ -73,16 +73,16 @@ export default class ColorParser {
 
         this.tokens = this.tokenize();
 
-        /*
-        this.model = this.detectModel();
-        this.channels = this.createChannels();
+        /**
+            this.model = this.detectModel();
+            this.channels = this.createChannels();
 
-        this.rawColor =
-            (this.model !== null && this.channels !== null)
-                ? new ColorChannels(this.model, this.channels)
-                : null;
-        if (this.rawColor === null) return;
-        this.color = this.parse();
+            this.rawColor =
+                (this.model !== null && this.channels !== null)
+                    ? new ColorChannels(this.model, this.channels)
+                    : null;
+            if (this.rawColor === null) return;
+            this.color = this.parse();
         */
 
         if (__PRINT_DEBUG__) console.log('\n\n')
@@ -233,10 +233,6 @@ export default class ColorParser {
         return RX.DELIMITER.test(char);
     }
 
-
-
-
-
     private isDefinitelyNotANumber(input: any): boolean {
         // Check if the type is explicitly the 'number' primitive and also check for NaN
         if (typeof input === 'number') {
@@ -257,6 +253,7 @@ export default class ColorParser {
         return isNaN(parsedValue);
     }
 
+    // Convert NUMBER Token Value from string to number
     private toNumber(token: Token): number | null {
         let value: string = token.value;
         let result: number | null = null;
@@ -275,7 +272,8 @@ export default class ColorParser {
 
     private scanIdentifier(initial: string): string {
         let value = initial;
-        while (!this.isEOL && this.isAlpha(this.peek())) value += this.next();
+        while (!this.isEOL && this.isAlpha(this.peek()))
+            value += this.next();
         return value;
     }
 
@@ -283,15 +281,17 @@ export default class ColorParser {
         let value = initial;
 
         // Integer
-        while (!this.isEOL && this.isDigit(this.peek())) value += this.next();
+        while (!this.isEOL && this.isNumber(this.peek()))
+            value += this.next();
 
         // Decimal
         if (this.peek() === '.') {
             // Consume the decimal
             value += this.next();
 
-            // Fractional digits
-            while (!this.isEOL && this.isDigit(this.peek())) value += this.next();
+            // Fractional numbers
+            while (!this.isEOL && this.isNumber(this.peek()))
+                value += this.next();
         }
 
         // Exponent
@@ -301,40 +301,39 @@ export default class ColorParser {
             value += e;
 
             // Optional sign
-            if (this.peek() === '+' || this.peek() === '-') value += this.next();
+            if (this.peek() === '+' || this.peek() === '-')
+                value += this.next();
 
-            // Exponent digits
-            while (!this.isEOL && this.isDigit(this.peek())) value += this.next();
+            // Exponent numbers
+            while (!this.isEOL && this.isNumber(this.peek()))
+                value += this.next();
         }
 
         // Percentage
         if (this.peek() === '%') {
             value += this.next();
-            // Convert Percentage to Decimal ? or keep as string?
-            //return parseFloat(value.slice(0, -1)) / 100.0;
         }
 
         // Units (deg, rad, turn, grad)
-        while (!this.isEOL && this.isAlpha(this.peek())) value += this.next();
+        while (!this.isEOL && this.isAlpha(this.peek()))
+            value += this.next();
 
-        // return string or a number?
         return value;
-        //return parseFloat(value);
     }
 
     private scanWhitespace(char: string): string {
         let value = char;
-        while (!this.isEOL && RX.WHITESPACE.test(this.peek())) value += this.next();
+        while (!this.isEOL && RX.WHITESPACE.test(this.peek()))
+            value += this.next();
         return value;
     }
 
     private scanHexValue(char: string): string {
         let value = char;
-        while (!this.isEOL) value += this.next();
+        while (!this.isEOL)
+            value += this.next();
         return value;
     }
-
-
 
 }
 
