@@ -125,7 +125,7 @@ describe('Tokenizer Hex Colors', () => {
     });
 });
 
-/*
+
 describe('Tokenizer RGB/RGBA Colors', () => {
     // Test valid rgb() values
     it('should tokenize rgb() colors', () => {
@@ -147,20 +147,12 @@ describe('Tokenizer RGB/RGBA Colors', () => {
                 'value': ',',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'NUMBER',
                 'value': '0',
             },
             {
                 'type': 'COMMA',
                 'value': ',',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'NUMBER',
@@ -185,48 +177,24 @@ describe('Tokenizer RGB/RGBA Colors', () => {
                 'value': '(',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'NUMBER',
                 'value': '0',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'COMMA',
                 'value': ',',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'NUMBER',
                 'value': '0',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'COMMA',
                 'value': ',',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'NUMBER',
                 'value': '0',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'CLOSE_PAREN',
@@ -251,32 +219,16 @@ describe('Tokenizer RGB/RGBA Colors', () => {
                 'value': '100',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'NUMBER',
                 'value': '50',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'NUMBER',
                 'value': '200',
             },
             {
-                'type': 'WHITESPACE',
-                'value': ' ',
-            },
-            {
                 'type': 'SLASH',
                 'value': '/',
-            },
-            {
-                'type': 'WHITESPACE',
-                'value': ' ',
             },
             {
                 'type': 'PERCENTAGE',
@@ -292,21 +244,41 @@ describe('Tokenizer RGB/RGBA Colors', () => {
             },
         ]);
     });
-});
-//*/
-/*
+
     // Test valid named colors
     it('should parse named colors', () => {
-        expect(new Tokenizer('white').tokens).toEqual({
-            model: 'rgba', r: 255, g: 255, b: 255, alpha: 1
-        });
-        expect(new Tokenizer('black').tokens).toEqual({
-            model: 'rgba', r: 0, g: 0, b: 0, alpha: 1
-        });
-        expect(new Tokenizer('red').tokens).toEqual({
-            model: 'rgba', r: 255, g: 0, b: 0, alpha: 1
-        });
+        expect(new Tokenizer('white').tokens).toEqual([
+            {
+                type: 'IDENTIFIER',
+                value: 'white',
+            },
+            {
+                'type': 'EOL',
+                'value': '',
+            },
+        ]);
+        expect(new Tokenizer('black').tokens).toEqual([
+            {
+                type: 'IDENTIFIER',
+                value: 'black',
+            },
+            {
+                'type': 'EOL',
+                'value': '',
+            },
+        ]);
+        expect(new Tokenizer('red').tokens).toEqual([
+            {
+                type: 'IDENTIFIER',
+                value: 'red',
+            },
+            {
+                'type': 'EOL',
+                'value': '',
+            },
+        ]);
     });
+});
 //*/
 /*
 describe('CSS Color String Tokenizer class', () => {

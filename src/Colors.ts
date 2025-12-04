@@ -2,7 +2,7 @@
  * X11 color names
  * http://www.w3.org/TR/css3-color/#svg-color
  */
-const Colors: HexColorMap = {
+export const Colors = {
     aliceblue: '#f0f8ff',
     antiquewhite: '#faebd7',
     aqua: '#00ffff',
@@ -187,8 +187,24 @@ export const CC = {
     bgwhite: '\x1b[47m',
 } as const;
 
-export default Colors;
-
+export const CSSColors = {
+    black: '#000000',
+    silver: '#c0c0c0',
+    gray: '#808080',
+    white: '#ffffff',
+    maroon: '#800000',
+    red: '#ff0000',
+    purple: '#800080',
+    fuchsia: '#ff00ff',
+    green: '#008000',
+    lime: '#00ff00',
+    olive: '#808000',
+    yellow: '#ffff00',
+    navy: '#000080',
+    blue: '#0000ff',
+    teal: '#008080',
+    aqua: '#00ffff',
+} as const;
 
 // --- Usage ---
 /*

@@ -1,22 +1,22 @@
 const __DEBUG__ = true;
 
-import { CC } from '../src/Colors.ts';
+import { Colors, CC, CSSColors } from './Colors.ts';
 
-enum TokenType {
-    FUNCTION = 'FUNCTION',          // 'rgba', 'rgb', 'hsl', etc.
-    IDENTIFIER = 'IDENTIFIER',      // Any word/letter not already captured 
-    HEXSTRING = 'HEXSTRING',        // '#fff', '#ffff', '#ffffff', '#ffffffff'
-    NUMBER = 'NUMBER',              // '127', '120', '80'
-    PERCENTAGE = 'PERCENTAGE',      // '80%'
-    COMMA = 'COMMA',                // ',' (for older syntax)
-    SLASH = 'SLASH',                // '/' (for modern syntax)
-    OPEN_PAREN = 'OPEN_PAREN',      // '('
-    CLOSE_PAREN = 'CLOSE_PAREN',    // ')'
-    DELIMITER = 'DELIMITER',        // Any delimiter not already captured
-    WHITESPACE = 'WHITESPACE',      // ' '
-    CHAR = 'CHAR',                  // Any single character not already captured
-    EOL = 'EOL'                     // End of line/string
-}
+const TokenType = {
+    FUNCTION: 'FUNCTION',          // 'rgba', 'rgb', 'hsl', etc.
+    IDENTIFIER: 'IDENTIFIER',      // Any word/letter not already captured 
+    HEXSTRING: 'HEXSTRING',        // '#fff', '#ffff', '#ffffff', '#ffffffff'
+    NUMBER: 'NUMBER',              // '127', '120', '80'
+    PERCENTAGE: 'PERCENTAGE',      // '80%'
+    COMMA: 'COMMA',                // ',' (for older syntax)
+    SLASH: 'SLASH',                // '/' (for modern syntax)
+    OPEN_PAREN: 'OPEN_PAREN',      // '('
+    CLOSE_PAREN: 'CLOSE_PAREN',    // ')'
+    DELIMITER: 'DELIMITER',        // Any delimiter not already captured
+    WHITESPACE: 'WHITESPACE',      // ' '
+    CHAR: 'CHAR',                  // Any single character not already captured
+    EOL: 'EOL'                     // End of line/string
+} as const;
 
 /* Regular Expressions */
 /*
@@ -42,14 +42,16 @@ const RX = {
 
 const tokenMatchers = [
     { type: TokenType.WHITESPACE, regex: /^\s+/i },
-    { type: TokenType.FUNCTION, regex: /^(rgba?|hsla?|hwba?|lab|lch|oklab|oklch)+\b/i }, ///^[a-zA-Z]+\b/ },
-    { type: TokenType.PERCENTAGE, regex: /^-?\d*\.?\d+%/i },
-    { type: TokenType.NUMBER, regex: /^-?\d*\.?\d+/i },
     { type: TokenType.HEXSTRING, regex: /^#([a-f\d]{3,4}|[a-f\d]{6}|[a-f\d]{8})+$/i },
+    { type: TokenType.PERCENTAGE, regex: /^-?\d*\.?\d+%/i },
+    { type: TokenType.NUMBER, regex: /^-?\d*\.?\d+(deg|grad|rad|turn)+\b|^-?\d*\.?\d+/i },
+    { type: TokenType.FUNCTION, regex: /^(rgba?|hsla?|hwba?|lab|lch|oklab|oklch)+\b/i }, ///^[a-zA-Z]+\b/ },
+    { type: TokenType.IDENTIFIER, regex: /^(black|silver|gray|white|maroon|red|purple|fuchsia|green|lime|olive|yellow|navy|blue|teal|aqua|[a-zA-Z0-9])+\b/i },
     { type: TokenType.COMMA, regex: /^,/i },
     { type: TokenType.SLASH, regex: /^\//i },
     { type: TokenType.OPEN_PAREN, regex: /^\(/i },
     { type: TokenType.CLOSE_PAREN, regex: /^\)/i },
+    { type: TokenType.DELIMITER, regex: /[\(\),\/]/i, }
 ] as const;
 
 export default class Tokenizer {
@@ -119,6 +121,10 @@ export default class Tokenizer {
         return this.currentPosition >= this.source.length;
     }
 
+    private isValidKey(key: string, obj: object): key is keyof typeof obj {
+        return key in obj;
+    }
+
     //
     // 2. Tokenize()
     //
@@ -133,10 +139,10 @@ export default class Tokenizer {
                 const match = this.source.substring(this.currentPosition).match(matcher.regex);
                 if (match) {
                     // Skip whitespace tokens in the final list for the parser
-                    //if (matcher.type !== TokenType.WHITESPACE) {
-                    const matchedToken = { type: matcher.type, value: match[0] };
-                    tokens.push(matchedToken);
-                    //}
+                    if (matcher.type !== TokenType.WHITESPACE) {
+                        const matchedToken = { type: matcher.type, value: match[0] };
+                        tokens.push(matchedToken);
+                    }
                     this.currentPosition += match[0].length;
                     matched = true;
                     break;
@@ -164,21 +170,50 @@ export default class Tokenizer {
         this.print('3. Tokenizer - createAST()');
         if (tokens === null) return null;
 
+        console.log("3. Tokenizer - this.currentPosition:", this.currentPosition);
+
         let current = 0; // Current token index
 
         // Helper to get the current token
-        function walk(): ASTNode | null {
-
+        const walk = (): ASTNode | null => {
             let token = tokens[current];
-
             if (!token) return null;
 
-            // --- RULE 1: Handle a Function Call (e.g., rgba(...)) ---
-            if (token.type === 'FUNCTION') {
+            // --- RULE: Handle Hex Strings (Hexadecimal Colors) ---
+            if (token.type === TokenType.HEXSTRING) {
+                current++; // Consume the hex string token
+                return {
+                    type: 'hexstring', // Matches our previous AST type name
+                    value: token.value,
+                    //unit: "", // Generic parser might leave unit logic to the lexer or later pass
+                };
+            }
+
+            // --- RULE: Handle Identifiers (Named Colors) ---
+            if (token.type === TokenType.IDENTIFIER) {
+                current++; // Consume the hex string token
+                if (this.isValidKey(token.value, CSSColors)) {
+                    return {
+                        type: 'identifier', // Matches our previous AST type name
+                        value: CSSColors[token.value],
+                        //unit: "", // Generic parser might leave unit logic to the lexer or later pass
+                    };
+                } else if (this.isValidKey(token.value, Colors)) {
+                    return {
+                        type: 'identifier', // Matches our previous AST type name
+                        value: Colors[token.value],
+                        //unit: "", // Generic parser might leave unit logic to the lexer or later pass
+                    };
+                }
+                return null;
+            }
+
+            // --- RULE: Handle a Function Call (e.g., rgba(...)) ---
+            if (token.type === TokenType.FUNCTION) {
                 current++; // Consume the function name token
 
                 // Expect a left parenthesis next
-                if (tokens[current].type !== 'OPEN_PAREN') {
+                if (tokens[current].type !== TokenType.OPEN_PAREN) {
                     throw new Error('Expected ( after function name');
                 }
                 current++; // Consume the '(' token
@@ -191,7 +226,7 @@ export default class Tokenizer {
                 };
 
                 // Loop through arguments/operators until we hit the closing ')'
-                while (tokens[current] && tokens[current].type !== 'CLOSE_PAREN') {
+                while (tokens[current] && tokens[current].type !== TokenType.CLOSE_PAREN) {
                     // We call walk() recursively to parse the *next* meaningful token inside the function
                     const childNode = walk();
                     if (childNode) {
@@ -200,7 +235,7 @@ export default class Tokenizer {
                 }
 
                 // Expect and consume the right parenthesis
-                if (tokens[current].type !== 'CLOSE_PAREN') {
+                if (tokens[current].type !== TokenType.CLOSE_PAREN) {
                     throw new Error('Expected ) after function arguments');
                 }
                 current++; // Consume the ')' token
@@ -208,8 +243,8 @@ export default class Tokenizer {
                 return functionNode;
             }
 
-            // --- RULE 2: Handle Numbers (Arguments) ---
-            if (token.type === 'NUMBER') {
+            // --- RULE: Handle Numbers (Arguments) ---
+            if (token.type === TokenType.NUMBER) {
                 current++; // Consume the number token
                 return {
                     type: 'numeric', // Matches our previous AST type name
@@ -218,8 +253,19 @@ export default class Tokenizer {
                 };
             }
 
-            // --- RULE 3: Handle Operators (Commas) ---
-            if (token.type === 'COMMA') {
+            // --- RULE: Handle Percentages (%) ---
+            if (token.type === TokenType.PERCENTAGE) {
+                current++; // Consume the number token
+                const percent = token.value.slice(0, -1);
+                return {
+                    type: 'percentage', // Matches our previous AST type name
+                    value: percent,
+                    unit: "%", // Generic parser might leave unit logic to the lexer or later pass
+                };
+            }
+
+            // --- RULE: Handle Operators (Commas) ---
+            if (token.type === TokenType.COMMA) {
                 current++; // Consume the comma token
                 return {
                     type: 'operator',
@@ -227,13 +273,12 @@ export default class Tokenizer {
                 };
             }
 
-            // --- RULE 4: Handle Hex Strings (Arguments) ---
-            if (token.type === 'HEXSTRING') {
-                current++; // Consume the hex string token
+            // --- RULE: Handle Operators (Forward Slashes) ---
+            if (token.type === TokenType.SLASH) {
+                current++; // Consume the comma token
                 return {
-                    type: 'hexstring', // Matches our previous AST type name
-                    value: token.value,
-                    //unit: "", // Generic parser might leave unit logic to the lexer or later pass
+                    type: 'operator',
+                    value: '/',
                 };
             }
 
@@ -249,7 +294,7 @@ export default class Tokenizer {
             // In a real-world scenario, you might have whitespace tokens that are ignored
             console.warn("Parser finished early or has leftover tokens.");
         }
-        this.print('3.A. Tokenizer - ast', ast);
+        console.log('3.A. Tokenizer - ast', ast);
         return ast;
     }
 

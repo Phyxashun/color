@@ -16,8 +16,23 @@ declare enum TokenType {
     EOL = 'EOL'                     // End of line/string
 }
 
+declare type TTokenType =
+    | 'FUNCTION'
+    | 'IDENTIFIER'
+    | 'HEXSTRING'
+    | 'NUMBER'
+    | 'PERCENTAGE'
+    | 'COMMA'
+    | 'SLASH'
+    | 'OPEN_PAREN'
+    | 'CLOSE_PAREN'
+    | 'DELIMITER'
+    | 'WHITESPACE'
+    | 'CHAR'
+    | 'EOL';
+
 declare interface Token {
-    type: TokenType;
+    type: TTokenType;
     value: string;
 }
 
@@ -50,6 +65,7 @@ type AST = FunctionNode;
 type ASTNode = {
     type: string;
     value: string;
+    unit?: string;
     nodes?: ASTNode[]
 };
 
