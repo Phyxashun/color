@@ -6,9 +6,9 @@ import { Colors } from "./src/Colors.ts";
 export const test = [
 
     // Named colors
-    //new Tokenizer(Colors.rebeccapurple),
-    //new Tokenizer('rebeccapurple'),
-    //new Tokenizer(Colors.aliceblue),
+    new Tokenizer(Colors.rebeccapurple),
+    new Tokenizer('rebeccapurple'),
+    new Tokenizer(Colors.aliceblue),
     new Tokenizer('aliceblue'),
 
     // NUM Numbers (R, G, B, A?)

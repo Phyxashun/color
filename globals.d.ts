@@ -69,6 +69,12 @@ type ASTNode = {
     nodes?: ASTNode[]
 };
 
+
+interface CallablePrint {
+
+}
+
+
 /*
 type ColorName = keyof typeof NamedColors;
 

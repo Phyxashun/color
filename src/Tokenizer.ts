@@ -1,6 +1,7 @@
 const __DEBUG__ = true;
 
-import { Colors, CC, CSSColors } from './Colors.ts';
+import { Colors, ConsoleColors, CSSColors } from './Colors.ts';
+import Print from './Print.ts';
 
 const TokenType = {
     FUNCTION: 'FUNCTION',          // 'rgba', 'rgb', 'hsl', etc.
@@ -55,7 +56,6 @@ const tokenMatchers = [
 ] as const;
 
 export default class Tokenizer {
-    private readonly data: any[] = [];
     //private readonly source: string = '';
     source: string = '';
     private currentPosition: number = 0;
@@ -67,47 +67,16 @@ export default class Tokenizer {
     // 1.A. Constructor Args
     //
     constructor(...args: any[]) {
-        this.print('1. Tokenizer - Constructor()');
+        Print('1. Tokenizer - Constructor()');
         const [sourceString] = [...args];
         this.source = this.validateSource(sourceString);
-        this.print('1.A. Constructor Args:', this.source);
+        Print('1.A. Constructor Args:', this.source);
 
         this.tokens = this.tokenize();
         this.AST = this.createAST(this.tokens!);
 
         if (__DEBUG__) console.log('\n')
-        if (__DEBUG__) console.table(this.data);
-    }
-
-    private print(m?: string, v1?: any, v2?: any): void {
-        if (!v1 && !v2) {
-            this.data.push({
-                Message: m
-            });
-        } else if (v1 !== null && typeof v1 === 'object' && !v2) {
-            this.data.push({
-                Message: m,
-                Value1: JSON.stringify(v1)
-            });
-        } else if (v1 !== null && typeof v1 === 'object' &&
-            v2 !== null && typeof v2 === 'object') {
-            this.data.push({
-                Message: m,
-                Value1: JSON.stringify(v1),
-                Value2: JSON.stringify(v2)
-            });
-        } else if (!v2) {
-            this.data.push({
-                Message: m,
-                Value1: v1
-            });
-        } else {
-            this.data.push({
-                Message: m,
-                Value1: v1,
-                Value2: v2
-            });
-        }
+        if (__DEBUG__) Print.log();
     }
 
     private validateSource(...args: any) {
@@ -129,12 +98,13 @@ export default class Tokenizer {
     // 2. Tokenize()
     //
     private tokenize(): Token[] | null {
-        this.print('2. Tokenizer - tokenize()');
+        Print('2. Tokenizer - tokenize()');
 
         let tokens: Token[] = [];
 
         while (!this.isEOL) {
             let matched = false;
+
             for (const matcher of tokenMatchers) {
                 const match = this.source.substring(this.currentPosition).match(matcher.regex);
                 if (match) {
@@ -147,18 +117,19 @@ export default class Tokenizer {
                     matched = true;
                     break;
                 }
+
             }
             if (!matched) {
                 const p = this.currentPosition;
-                console.error(`${CC.red}ERROR:${CC.reset} Tokenizer.tokenize(): Unexpected character at ${CC.blue}position ${p}: ${this.source[p]}${CC.reset}`);
-                this.print('2.B. Tokenizer - tokens:', 'null');
+                console.error(`${ConsoleColors.red}ERROR:${ConsoleColors.reset} Tokenizer.tokenize(): Unexpected character at ${ConsoleColors.blue}position ${p}: ${this.source[p]}${ConsoleColors.reset}`);
+                Print('2.B. Tokenizer - tokens:', 'null');
                 return null;
             }
         }
 
         tokens.push({ type: TokenType.EOL, value: '' });
         for (const token of tokens) {
-            this.print('2.B. Tokenizer - tokens:', token);
+            Print('2.B. Tokenizer - tokens:', token);
         }
         return tokens;
     }
@@ -167,7 +138,7 @@ export default class Tokenizer {
     // 3. CreateAST()
     //
     private createAST(tokens: Token[]): ASTNode | null {
-        this.print('3. Tokenizer - createAST()');
+        Print('3. Tokenizer - createAST()');
         if (tokens === null) return null;
 
         console.log("3. Tokenizer - this.currentPosition:", this.currentPosition);

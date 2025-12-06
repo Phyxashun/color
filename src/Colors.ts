@@ -159,7 +159,7 @@ export const Colors = {
     yellowgreen: '#9acd32'
 } as const;
 
-export const CC = {
+export const ConsoleColors = {
     reset: '\x1b[0m',
     bright: '\x1b[1m',
     dim: '\x1b[2m',
@@ -205,48 +205,3 @@ export const CSSColors = {
     teal: '#008080',
     aqua: '#00ffff',
 } as const;
-
-// --- Usage ---
-/*
-type FixedLengthString<L extends number> = string & { readonly length: L };
-
-function isFixedLengthString<L extends number>(s: string, length: L): s is FixedLengthString<L> {
-    return s.length === length;
-}
-
-function setHexColor(hex: string): HexColor | never {
-    const color = hex.slice(1);
-    console.log("hex argument:", hex, "hex length:", hex.length);
-    console.log("color argument:", color, "color length:", color.length, '\n');
-    if (
-        isFixedLengthString(color, 3) ||
-        isFixedLengthString(color, 4) ||
-        isFixedLengthString(color, 6) ||
-        isFixedLengthString(color, 8)
-    ) {
-        console.log("Validated color:", color);
-        return `#${color}` as HexColor;
-    } else {
-        console.error("Error: Color must be exactly 3 characters long.");
-        throw new Error("Invalid length");
-    }
-}
-
-type Hex3 = `${FixedLengthString<3>}`;
-type Hex4 = `${FixedLengthString<4>}`;
-type Hex6 = `${FixedLengthString<6>}`;
-type Hex8 = `${FixedLengthString<8>}`;
-
-type HexColor = Hex3 | Hex4 | Hex6 | Hex8;
-
-const colorValid3: HexColor = setHexColor('#FFF');
-const colorValid4: HexColor = setHexColor('#ffff');
-const colorValid6: HexColor = setHexColor('#ffffff');
-const colorValid8: HexColor = setHexColor('#ffffffff');
-
-
-console.log("color:", colorValid3);
-console.log("color:", colorValid4);
-console.log("color:", colorValid6);
-console.log("color:", colorValid8);
-*/
