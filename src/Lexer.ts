@@ -138,6 +138,7 @@ export const NodeType = {
 } as const;
 
 type NodeType = typeof NodeType[keyof typeof NodeType];
+type NodeValue = [ValueNode, ValueNode, ValueNode] | Node | HexValue | number | null;
 
 type Node =
     | StartNode
@@ -150,61 +151,64 @@ type Node =
     | AlphaNode
     | ValueNode
 
-type StartNode = {
+interface INode {
+    type: NodeType;
+    value: NodeValue;
+}
+
+interface StartNode extends INode {
     type: '<start>';
     value: ColorNode;
 }
 
-type ColorNode = {
+interface ColorNode extends INode {
     type: '<color>';
     value: HexNode | FunctionNode;
 }
 
 type HexValue = `#${string}`;
 
-type HexNode = {
+interface HexNode extends INode {
     type: '<hex-color>';
     value: HexValue;
 }
 
-type FunctionNode = {
+interface FunctionNode extends INode {
     type: '<function-color>';
     name: ColorModel;
     value: ChannelsListNode;
 }
 
-type ChannelsListNode = {
+interface ChannelsListNode extends INode {
     type: '<channels-list>';
     value: SpaceSeparatedNode | CommaSeparatedNode;
 }
 
-type SpaceSeparatedNode = {
+interface SpaceSeparatedNode extends INode {
     type: '<space-separated-list>';
     value: [ValueNode, ValueNode, ValueNode];
     alpha?: AlphaNode;
 }
 
-type CommaSeparatedNode = {
+interface CommaSeparatedNode extends INode {
     type: '<comma-separated-list>';
     value: [ValueNode, ValueNode, ValueNode];
     alpha?: AlphaNode;
 }
 
-type AlphaNode = {
+interface AlphaNode extends INode {
     type: '<alpha-channel>' | '<optional-alpha>';
     value: ValueNode | null;
 }
 
-type ValueNode = {
+interface ValueNode extends INode {
     type: '<value>';
-} & NumericValue;
+    valueType: 'number' | 'percentage' | 'angle';
+    value: number;
+    units?: '%' | Units;
+}
 
 type Units = 'deg' | 'rad' | 'grad' | 'turn';
-
-type NumericValue =
-    | { name: '<number>'; value: number; }
-    | { name: '<percentage>'; value: number; units: '%'; }
-    | { name: '<angle>'; value: number; units: Units; }
 
 type ColorModel =
     | 'hex'
@@ -268,7 +272,7 @@ export class Parser {
      */
     ColorString(): Node {
         return {
-            type: 'ColorString',
+            type: NodeType.color,
             value: this.FunctionNotation()
         };
     }
