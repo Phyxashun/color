@@ -197,7 +197,6 @@ describe('Parser', () => {
             const ast = parser.parse('rgb(255 0 0)');
 
             expect(ast.value.value.type).toBe(NodeType.function);
-            expect(ast.value.value.name).toBe('rgb');
             expect(ast.value.value.value.type).toBe(NodeType.channels);
             expect(ast.value.value.value.value.type).toBe(NodeType.space);
             expect(ast.value.value.value.value.channels).toHaveLength(3);

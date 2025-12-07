@@ -1,5 +1,3 @@
-/// <reference types='../globals.d.ts' />
-
 //*************************************************************************************************
 //*
 //* CSS COLOR PARSER - Complete Implementation
@@ -58,77 +56,7 @@ interface Token {
     value: string;
 }
 
-interface Node {
-    type: NodeType;
-    value: ASTNode
-}
-
-type ASTNode =
-    | StartNode
-    | ColorNode
-    | HexNode
-    | FunctionNode
-    | ChannelsListNode
-    | SpaceSeparatedNode
-    | CommaSeparatedNode
-    | AlphaNode
-    | ValueNode
-    | string
-    | number
-
-
-
-interface StartNode {
-    type: '<start>';
-    value: ColorNode;
-}
-
-interface ColorNode extends Node {
-    type: '<color>';
-    value: HexNode | FunctionNode;
-}
-
 type HexValue = `#${string}`;
-
-interface HexNode extends Node {
-    type: '<hex-color>';
-    value: HexValue;
-}
-
-interface FunctionNode extends Node {
-    type: '<function-color>';
-    name: ColorModel;
-    value: ChannelsListNode;
-}
-
-interface ChannelsListNode extends Node {
-    type: '<channels-list>';
-    value: SpaceSeparatedNode | CommaSeparatedNode;
-}
-
-interface SpaceSeparatedNode extends Node {
-    type: '<space-separated-list>';
-    channels: [ValueNode, ValueNode, ValueNode] | [ValueNode, ValueNode, ValueNode, ValueNode];
-    alpha?: AlphaNode | undefined;
-}
-
-interface CommaSeparatedNode extends Node {
-    type: '<comma-separated-list>';
-    channels: [ValueNode, ValueNode, ValueNode] | [ValueNode, ValueNode, ValueNode, ValueNode];
-    alpha?: AlphaNode | undefined;
-}
-
-interface AlphaNode extends Node {
-    type: '<alpha-channel>' | '<optional-alpha>';
-    value: ValueNode;
-}
-
-interface ValueNode extends Node {
-    type: '<value>';
-    valueType: 'number' | 'percentage' | 'angle';
-    value: number;
-    units?: '%' | Units | undefined;
-}
 
 type Units = 'deg' | 'rad' | 'grad' | 'turn';
 
@@ -150,7 +78,56 @@ type ColorModel =
 
 type TokenRules = [TokenType, RegExp];
 
+// AST Node Types
+interface StartNode {
+    type: '<start>';
+    value: ColorNode;
+}
 
+interface ColorNode {
+    type: '<color>';
+    value: HexNode | FunctionNode;
+}
+
+interface HexNode {
+    type: '<hex-color>';
+    value: HexValue;
+}
+
+interface FunctionNode {
+    type: '<function-color>';
+    name: ColorModel;
+    value: ChannelsListNode;
+}
+
+interface ChannelsListNode {
+    type: '<channels-list>';
+    value: SpaceSeparatedNode | CommaSeparatedNode;
+}
+
+interface SpaceSeparatedNode {
+    type: '<space-separated-list>';
+    value: [ValueNode, ValueNode, ValueNode] | [ValueNode, ValueNode, ValueNode, ValueNode];
+    alpha?: AlphaNode | undefined;
+}
+
+interface CommaSeparatedNode {
+    type: '<comma-separated-list>';
+    value: [ValueNode, ValueNode, ValueNode] | [ValueNode, ValueNode, ValueNode, ValueNode];
+    alpha?: AlphaNode | undefined;
+}
+
+interface AlphaNode {
+    type: '<alpha-channel>' | '<optional-alpha>';
+    value: ValueNode;
+}
+
+interface ValueNode {
+    type: '<value>';
+    valueType: 'number' | 'percentage' | 'angle';
+    value: number;
+    units?: '%' | Units | undefined;
+}
 
 export class Parser {
     private string: string;
@@ -287,7 +264,7 @@ export class Parser {
             alpha = this.AlphaChannel();
             return {
                 type: NodeType.space,
-                channels: [firstValue, secondValue, thirdValue],
+                value: [firstValue, secondValue, thirdValue],
                 alpha,
             };
         } else if (this.lookahead?.type === TokenType.NUMBER) {
@@ -295,14 +272,14 @@ export class Parser {
             const fourthValue = this.Value();
             return {
                 type: NodeType.space,
-                channels: [firstValue, secondValue, thirdValue, fourthValue],
+                value: [firstValue, secondValue, thirdValue, fourthValue],
                 alpha: undefined,
             };
         }
 
         return {
             type: NodeType.space,
-            channels: [firstValue, secondValue, thirdValue],
+            value: [firstValue, secondValue, thirdValue],
             alpha: undefined,
         };
     }
@@ -319,17 +296,16 @@ export class Parser {
 
         let alpha: AlphaNode | undefined = undefined;
 
-        if (this.lookahead.type === TokenType.COMMA) {
+        if (this.lookahead?.type === TokenType.COMMA) {
             this.eat(TokenType.COMMA);
             const fourthValueOrAlpha = this.Value();
 
             // Check if we're at the end (CMYK with 4 values)
-            if (this.lookahead.type === TokenType.RPAREN
-                || this.lookahead.type === TokenType.EOF) {
+            if (this.lookahead?.type === TokenType.RPAREN || this.lookahead?.type === TokenType.EOF) {
                 // This is CMYK with 4 values, no alpha
                 return {
                     type: NodeType.comma,
-                    channels: [firstValue, secondValue, thirdValue, fourthValueOrAlpha],
+                    value: [firstValue, secondValue, thirdValue, fourthValueOrAlpha],
                     alpha: undefined,
                 };
             } else {
@@ -343,7 +319,7 @@ export class Parser {
 
         return {
             type: NodeType.comma,
-            channels: [firstValue, secondValue, thirdValue],
+            value: [firstValue, secondValue, thirdValue],
             alpha,
         };
     }
@@ -357,19 +333,6 @@ export class Parser {
 
         return {
             type: NodeType.alpha,
-            value,
-        };
-    }
-
-    /**
-     * <optional-alpha> ::= COMMA <value>
-     */
-    private OptionalAlpha(): AlphaNode {
-        this.eat(TokenType.COMMA);
-        const value = this.Value();
-
-        return {
-            type: NodeType.optional_alpha,
             value,
         };
     }
@@ -443,18 +406,23 @@ export default class Lexer {
         this.cursor = 0;
     }
 
-    // Whether the tokenizer has reached the EOF
+    /**
+     * Whether the tokenizer has reached the EOF
+     */
     isEOF(): boolean {
         return this.cursor === this.string.length;
     }
 
-    // Whether we still have more tokens
+    /**
+     * Whether we still have more tokens
+     */
     hasMoreTokens(): boolean {
         return this.cursor < this.string.length;
     }
 
-
-    // Obtains next token
+    /**
+     * Obtains next token
+     */
     getNextToken(): Token | null {
         if (!this.hasMoreTokens()) {
             return { type: TokenType.EOF, value: '' };
@@ -484,7 +452,9 @@ export default class Lexer {
         throw new SyntaxError(`Unexpected token: "${string[0]}" at position ${this.cursor}`);
     }
 
-    // Matches a token for a regular expression
+    /**
+     * Matches a token for a regular expression
+     */
     private match(regexp: RegExp, string: string): string | null {
         const matched = regexp.exec(string);
         if (matched === null) {

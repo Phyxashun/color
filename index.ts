@@ -1,3 +1,4 @@
+
 /// <reference types='./globals.d.ts' />
 
 import Tokenizer from "./src/Tokenizer.ts";
