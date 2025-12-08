@@ -24,16 +24,16 @@ export interface Token {
 export type TokenRules = [TokenType, RegExp];
 
 export const Spec: TokenRules[] = [
-    [TokenType.WHITESPACE, /\s+/],
+    [TokenType.WHITESPACE, /^\s+/],
     [TokenType.HEXVALUE, /^#([a-f\d]{3,4}|[a-f\d]{6}|[a-f\d]{8})+$/i],
     [TokenType.FUNCTION, /^(rgba?|hsla?|hwba?|hsva?|lab|lch|oklab|oklch|cmyk|color)/i],
     [TokenType.NUMBER, /^-?\d*\.?\d+\b|^-?\d*\.?\d+/],
     [TokenType.UNITS, /(deg|g?rad|turn)+\b/i],
-    [TokenType.PERCENT, /[%]+/],
-    [TokenType.COMMA, /[,]/],
-    [TokenType.SLASH, /[\/]/],
-    [TokenType.LPAREN, /[\(]/],
-    [TokenType.RPAREN, /[\)]/],
+    [TokenType.PERCENT, /%/],
+    [TokenType.COMMA, /,/],
+    [TokenType.SLASH, /\//],
+    [TokenType.LPAREN, /\(/],
+    [TokenType.RPAREN, /\)/],
     //[TokenType.IDENTIFIER, /^[a-z][\w-]*/i],
 ] as const;
 
@@ -69,38 +69,34 @@ export default class Tokenizer {
 
     // Obtain the next token
     tokenize(): Token[] {
+        let matched: boolean = false;
         let tokens: Token[] = [];
+
         const string = this.string.slice(this.cursor);
 
         // Match our token spec to the string
         for (const [tokenType, regexp] of Spec) {
-            const tokenValue = this.match(regexp, string);
+            const tokenValue = regexp.exec(string);
 
-            // If no match, continue to the next rule in the token spec
-            if (tokenValue === null) continue;
+            if (tokenValue) {
+                console.log("MATCH:", tokenValue);
+                // If the current token is whitespace, skip it
+                if (tokenType !== TokenType.WHITESPACE)
+                    tokens.push(this.createToken(tokenType, tokenValue[0]));
 
-            // If the current token is whitespace, skip it
-            if (tokenType === TokenType.WHITESPACE) continue;
+                //this.cursor += tokenValue.length;
+                matched = true;
+                break;
+            }
 
-            // Create a token and return it
-            if (tokenType && tokenValue) tokens.push(this.createToken(tokenType, tokenValue));
+            if (!matched) {
+
+                //throw new SyntaxError(`Unexpected token: "${string[0]}" at position ${this.cursor}`);
+            }
         }
+
         tokens.push(this.createToken(TokenType.EOF, 'EOF'));
-        if (tokens.length === 1) {
-            throw new SyntaxError(`Unexpected token: "${string[0]}" at position ${this.cursor}`);
-        }
         return tokens;
-    }
-
-    // Matches a token for a regular expression
-    private match(regexp: RegExp, string: string): string | null {
-        const matched = regexp.exec(string);
-        if (matched) {
-            this.cursor += matched[0].length;
-            return matched[0];
-        } else {
-            return null;
-        }
     }
 
     // Create a token
