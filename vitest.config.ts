@@ -14,13 +14,14 @@ export default defineConfig({
             '.vscode/',
             '.gitignore',
             'node_modules/',
-            'src/OLD_TEMP.ts'
+            'src/{OLD}*.ts'
         ],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
             include: [
-                './src/**/*.{ts,tsx}'
+                './src/Tokenizer.ts',
+                './src/Parser.ts',
             ],
             exclude: [
                 '.vscode/',

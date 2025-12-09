@@ -1,22 +1,5 @@
 type ClassConstructor<T> = new () => T;
-type ConstructorFunction = <T>(Ctor: ClassConstructor<T>) => T
-
-type TokenType =
-    | 'WHITESPACE'
-    | 'FUNCTION'
-    | 'HASH'
-    | 'HEXVALUE'
-    | 'LPAREN'
-    | 'NUMBER'
-    | 'PERCENT'
-    | 'UNITS'
-    | 'COMMA'
-    | 'SLASH'
-    | 'RPAREN'
-    | 'DELIMITER'
-    | 'IDENTIFIER'
-    | 'CHAR'
-    | 'EOF'
+type ConstructorFunction = < T >(Ctor: ClassConstructor<T>) => T
 
 type ColorModel =
     | 'rgb'
@@ -34,23 +17,49 @@ type ColorModel =
     | 'cmyk'
     | 'color'
 
+type TokenType = {
+    FUNCTION: 'FUNCTION',
+    IDENTIFIER: 'IDENTIFIER',
+    HASH: 'HASH',
+    HEXVALUE: 'HEXVALUE',
+    NUMBER: 'NUMBER',
+    PERCENT: 'PERCENT',
+    UNITS: 'UNITS',
+    COMMA: 'COMMA',
+    SLASH: 'SLASH',
+    LPAREN: 'LPAREN',
+    RPAREN: 'RPAREN',
+    DELIMITER: 'DELIMITER',
+    WHITESPACE: 'WHITESPACE',
+    CHAR: 'CHAR',
+    EOF: 'EOF'
+}
+
+type TokenTypeValue = TokenType[keyof TokenType];
+
 type Units = 'deg' | 'rad' | 'grad' | 'turn';
 
-type TokenHexValue = `#${string}`;
+type HexValue = `#${string}`;
+type AngleValue = `${number}${Units}`;
+type PercentValue = `${number}%`;
+type NumericValue = number | number[];
 
-type TokenAngleValue = `${number}${Units}`;
-
-type TokenPercentValue = `${number}%`;
-
-type TokenNumericValue = number | number[];
-
-type TokenValue = string | TokenNumericValue;
+type TokenValue = string | NumericValue;
 
 type Token = {
-    type: TokenType,
+    type: TokenTypeValue,
     value: TokenValue,
 };
 
-type TokenSpecTuple = [TokenType, RegExp];
+type TokenSpecTuple = [TokenTypeValue, RegExp];
 
-type TokenSpec = TokenSpecTuple[];
+type TokenSpec = Array<TokenSpecTuple>;
+
+declare class Tokenizer {
+    private readonly source: string;
+    private cursor: number;
+    tokens: Token[];
+
+    constructor(...args: any[]);
+}
+

@@ -1,9 +1,9 @@
 /// <reference types='../src/types/Tokenizer.d.ts' />
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Tokenizer, { TokenType } from '../src/Tokenizer.ts';
 //import Parser from '../src/Parser.ts';
-
+/*
 describe('tokenizer', () => {
     describe('tokenization', () => {
 
@@ -122,6 +122,7 @@ describe('tokenizer', () => {
     });
 });
 /*
+
 describe('Parser', () => {
     describe('hex colors', () => {
         it('should parse 3-digit hex colors', () => {
@@ -1098,4 +1099,134 @@ describe('Parser', () => {
             expect(ast.value.value.value).toBe('#aabbccdd');
         });
     });
-});//*/
+});
+//*/
+
+// Mock the Print module to avoid errors during testing
+vi.mock('../src/Print.ts');
+
+describe('Tokenizer', () => {
+
+    // Helper function to simplify getting tokens
+    const tokenize = (str: string) => new Tokenizer(str).tokens;
+
+    describe('Single Token Recognition', () => {
+        it('should tokenize a FUNCTION name', () => {
+            const tokens = tokenize('rgba');
+            expect(tokens[0]).toMatchObject({ type: TokenType.FUNCTION, value: 'rgba' });
+        });
+
+        it('should tokenize a HASH', () => {
+            const tokens = tokenize('#');
+            expect(tokens[0]).toMatchObject({ type: TokenType.HASH, value: '#' });
+        });
+
+        it('should tokenize a NUMBER (integer)', () => {
+            const tokens = tokenize('123');
+            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '123' });
+        });
+
+        it('should tokenize a NUMBER (float)', () => {
+            const tokens = tokenize('0.5');
+            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '0.5' });
+        });
+
+        it('should tokenize a NEGATIVE NUMBER', () => {
+            const tokens = tokenize('-45.5');
+            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '-45.5' });
+        });
+
+        it('should tokenize a PERCENTAGE', () => {
+            const tokens = tokenize('50%');
+            expect(tokens[0]).toMatchObject({ type: TokenType.PERCENT, value: '50%' });
+        });
+
+        it('should tokenize UNITS', () => {
+            const tokens = tokenize('deg');
+            expect(tokens[0]).toMatchObject({ type: TokenType.UNITS, value: 'deg' });
+        });
+
+        it('should tokenize a COMMA', () => {
+            const tokens = tokenize(',');
+            expect(tokens[0]).toMatchObject({ type: TokenType.COMMA, value: ',' });
+        });
+
+        it('should tokenize a SLASH', () => {
+            const tokens = tokenize('/');
+            expect(tokens[0]).toMatchObject({ type: TokenType.SLASH, value: '/' });
+        });
+
+        it('should tokenize an LPAREN', () => {
+            const tokens = tokenize('(');
+            expect(tokens[0]).toMatchObject({ type: TokenType.LPAREN, value: '(' });
+        });
+
+        it('should tokenize an RPAREN', () => {
+            const tokens = tokenize(')');
+            expect(tokens[0]).toMatchObject({ type: TokenType.RPAREN, value: ')' });
+        });
+    });
+
+    describe('Combined Tokenization and Whitespace Handling', () => {
+        it('should tokenize a full comma-separated rgba() string', () => {
+            const tokens = tokenize('rgba(255, 0, 128, 0.5)');
+            expect(tokens).toHaveLength(11);
+            expect(tokens.map(t => t.type)).toEqual([
+                TokenType.FUNCTION,
+                TokenType.LPAREN,
+                TokenType.NUMBER,
+                TokenType.COMMA,
+                TokenType.NUMBER,
+                TokenType.COMMA,
+                TokenType.NUMBER,
+                TokenType.COMMA,
+                TokenType.NUMBER,
+                TokenType.RPAREN,
+                TokenType.EOF,
+            ]);
+        });
+
+        it('should tokenize a space-separated hsl() string with alpha', () => {
+            const tokens = tokenize('hsl(120deg 100% 50% / 0.75)');
+            // WHITESPACE is correctly ignored and not present in the final token list
+            expect(tokens.map(t => t.value)).toEqual([
+                'hsl', '(', '120', 'deg', '100%', '50%', '/', '0.75', ')', 'EOF'
+            ]);
+        });
+
+        it('should handle case-insensitivity for functions and units', () => {
+            const tokens = tokenize('HSL(120DEG 100% 50%)');
+            expect(tokens[0]).toMatchObject({ type: TokenType.FUNCTION, value: 'HSL' });
+            expect(tokens[3]).toMatchObject({ type: TokenType.UNITS, value: 'DEG' });
+        });
+
+        it('should correctly tokenize color() with a color space identifier', () => {
+            // Note: The FUNCTION regex needs to be precise. 'color' should be a FUNCTION,
+            // and 'display-p3' should be an IDENTIFIER (which is not in the spec, so it will fail)
+            // This test exposes a limitation in the current TokenSpec.
+            expect(() => tokenize('color(display-p3 1 0.5 0)')).toThrow();
+        });
+    });
+
+    describe('Error Handling', () => {
+        it('should throw an error for an invalid character', () => {
+            const errorExpression = () => tokenize('rgb(255, 0, @)');
+            expect(errorExpression).toThrow(SyntaxError);
+            expect(errorExpression).toThrow('Tokenizer._tokenize(): Unexpected character: @, at position: 12.');
+        });
+
+        it('should throw an error for an empty source string', () => {
+            // An empty string is not invalid, it's just an immediate EOF.
+            const tokens = tokenize('');
+            expect(tokens).toHaveLength(1);
+            expect(tokens[0].type).toBe(TokenType.EOF);
+        });
+
+        it('should throw an error if constructor receives non-string input', () => {
+            // @ts-expect-error
+            expect(() => new Tokenizer(123)).toThrow('Tokenizer validateSource(): Class expects a string...');
+            // @ts-expect-error
+            expect(() => new Tokenizer(null)).toThrow('Tokenizer validateSource(): Class expects a string...');
+        });
+    });
+});

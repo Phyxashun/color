@@ -2,7 +2,7 @@
 
 import Print from './Print.ts';
 
-export const TokenType: Record<TokenType, TokenType> = {
+export const TokenType: TokenType = {
     FUNCTION: 'FUNCTION',           // 'rgba', 'rgb', 'hsl', etc.
     IDENTIFIER: 'IDENTIFIER',       // Any word/letter not already captured 
     HASH: 'HASH',                   // '#'
@@ -21,93 +21,142 @@ export const TokenType: Record<TokenType, TokenType> = {
 } as const;
 
 export const TokenSpec: TokenSpec = [
-    [TokenType.WHITESPACE, /^[\s]+/],
-    [TokenType.FUNCTION, /^(rgba?|hsla?|hwba?|hsva?|lab|lch|oklab|oklch|cmyk|color)/i], ///^[a-zA-Z]+\b/ },
-    [TokenType.PERCENT, /^-?\d*\.?\d+%/],
-    [TokenType.NUMBER, /^-?\d*\.?\d+/],
-    [TokenType.HEXVALUE, /^#([a-f\d]{3,4}|[a-f\d]{6}|[a-f\d]{8})+$/i],
-    [TokenType.UNITS, /^(deg|grad|rad|turn)\b/i],
-    [TokenType.COMMA, /^,/],
-    [TokenType.SLASH, /^\//],
+    // Whitespace (to be ignored)
+    [TokenType.WHITESPACE, /^\s+/],
+
+    // Specific function names
+    [TokenType.FUNCTION, /^(rgba?|hsla?|hwba?|hsva?|lab|lch|oklab|oklch|cmyk|color)\b/i],
+
+    // Punctuation
     [TokenType.LPAREN, /^\(/],
     [TokenType.RPAREN, /^\)/],
+    [TokenType.COMMA, /^,/],
+    [TokenType.SLASH, /^\//],
+
+    // Hash symbol for hex colors
+    [TokenType.HASH, /^#/],
+
+    // Units must come before IDENTIFIER
+    [TokenType.UNITS, /^(deg|grad|rad|turn)\b/i],
+
+    // Percentage must come before NUMBER
+    [TokenType.PERCENT, /^-?\d*\.?\d+%/],
+
+    // Number must come before IDENTIFIER
+    [TokenType.NUMBER, /^-?\d*\.?\d+/],
+
+    // Hex values (3, 4, 6, or 8 chars). Must come before IDENTIFIER.
+    // The \b ensures it doesn't match the start of a longer word.
+    [TokenType.HEXVALUE, /^([a-f\d]{8}|[a-f\d]{6}|[a-f\d]{4}|[a-f\d]{3})\b/i],
+
+    // Generic identifiers for color spaces like 'display-p3'
+    [TokenType.IDENTIFIER, /^[a-z][a-z\d-]*/i],
 ] as const;
 
 export default class Tokenizer {
     private readonly source: string = '';
-    private cursor: number = 0;
     tokens: Token[] = [];
+    private tokenIndex: number = 0;
 
-    constructor(...args: any[]) {
+    constructor(string: string) {
         Print('1. Tokenizer - Constructor()');
 
-        const [sourceString] = [...args];
-        this.source = this.validateSource(sourceString);
+        if (typeof string !== 'string') {
+            throw new Error('Tokenizer validateSource(): Class expects a string...');
+        }
+        this.source = string;
 
         Print('1.A. Constructor Args:', this.source);
 
-        this.tokens = this.tokenize();
+        this.tokens = this._tokenize();
         Print.log();
     }
 
-    private validateSource(...args: any) {
-        const [result] = [...args];
-        if (typeof result !== 'string')
-            throw new Error('Tokenizer validateSource(): Class expects a string...');
-        return result;
+    /**
+     * Returns the current token without consuming it.
+     */
+    public current(): Token {
+        return this.tokens[this.tokenIndex];
     }
 
-    private isEOF(): boolean {
-        return this.cursor >= this.source.length;
+    /**
+     * Consumes the current token and advances the cursor.
+     * @returns The consumed token.
+     */
+    public consume(): Token {
+        const token = this.current();
+        this.tokenIndex++;
+        return token;
     }
 
-    private tokenize(): Token[] {
+    /**
+     * Peeks at a future token without consuming the current one.
+     * @param offset How many tokens to look ahead (default is 1, the very next token).
+     * @returns The future token, or the EOF token if out of bounds.
+     */
+    public lookahead(offset: number = 1): Token {
+        const index = this.tokenIndex + offset;
+        if (index >= this.tokens.length) {
+            // Return the EOF token if looking past the end.
+            return this.tokens[this.tokens.length - 1];
+        }
+        return this.tokens[index];
+    }
+
+    /**
+     * Looks at a previously consumed token.
+     * @param offset How many tokens to look behind (default is 1, the immediate previous token).
+     * @returns The previous token, or null if the offset is invalid.
+     */
+    public lookbehind(offset: number = 1): Token | null {
+        const index = this.tokenIndex - offset;
+        if (index < 0) {
+            return null;
+        }
+        return this.tokens[index];
+    }
+
+    // This internal method contains the tokenization logic
+    private _tokenize(): Token[] {
         Print('2. Tokenizer - tokenize()');
 
-        let tokens: Token[] = [];
+        const tokens: Token[] = [];
+        let cursor = 0;
 
-        while (!this.isEOF()) {
+        while (cursor < this.source.length) {
+            const remaining = this.source.substring(cursor);
             let matched: boolean = false;
 
             for (const [tokenType, regexp] of TokenSpec) {
-                const match = this.source.substring(this.cursor).match(regexp);
+                const match = remaining.match(regexp);
+
                 if (match) {
+                    // Identifiers are invalid tokens, throw
+                    if (tokenType === TokenType.IDENTIFIER) {
+                        const errorMsg = `Tokenizer._tokenize(): Unexpected character: ${this.source[cursor]}, at position: ${cursor}.`;
+                        throw new SyntaxError(errorMsg);
+                    }
                     // Skip whitespace tokens in the final list for the parser
                     if (tokenType !== TokenType.WHITESPACE) {
-                        tokens.push(this.createToken(tokenType, match[0]));
+                        tokens.push({ type: tokenType, value: match[0] });
                     }
-
-                    this.cursor += match[0].length;
+                    cursor += match[0].length;
                     matched = true;
                     break;
                 }
             }
 
             if (!matched) {
-                this.throwError();
+                const errorMsg = `Tokenizer._tokenize(): Unexpected character: ${this.source[cursor]}, at position: ${cursor}.`;
+                throw new SyntaxError(errorMsg);
             }
         }
 
-        tokens.push(this.createToken(TokenType.EOF, 'EOF'));
+        tokens.push({ type: TokenType.EOF, value: 'EOF' });
+
         for (const token of tokens) {
             Print('2.B. Tokenizer - tokens:', token);
         }
         return tokens;
     }
-
-    private createToken(tType: TokenType, tValue: TokenValue): Token {
-        return {
-            type: tType,
-            value: tValue,
-        }
-    }
-
-    private throwError(): void {
-        let errorMsg = `Tokenizer.tokenize(): `;
-        errorMsg += `Unexpected character: ${this.source[this.cursor]}, `;
-        errorMsg += `at position: ${this.cursor}.`;
-
-        throw new SyntaxError(errorMsg);
-    }
-
 } // End of class Tokenizer
