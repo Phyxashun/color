@@ -5,7 +5,7 @@ stdout | test/Tokenizer.test.ts
 │ (index) │ Message                        │ Value1                              │
 ├─────────┼────────────────────────────────┼─────────────────────────────────────┤
 │ 0       │ '1. Tokenizer - Constructor()' │                                     │
-│ 1       │ '1.A. Constructor Args:'       │ 'rgb(255, 0, 0)'                  │
+│ 1       │ '1.A. Constructor Args:'       │ 'rgb(255, 0, 0)'                    │
 │ 2       │ '2. Tokenizer - tokenize()'    │                                     │
 │ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"rgb"}' │
 │ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"LPAREN","value":"("}'     │
@@ -168,15 +168,15 @@ stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize all
 └─────────┴────────────────────────────────┴───────────────────────────────────────┘
 
 stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize hex values
-┌─────────┬────────────────────────────────┬───────────────────────────────────────────┐
-│ (index) │ Message                        │ Value1                                    │
-├─────────┼────────────────────────────────┼───────────────────────────────────────────┤
-│ 0       │ '1. Tokenizer - Constructor()' │                                           │
+┌─────────┬────────────────────────────────┬─────────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                                  │
+├─────────┼────────────────────────────────┼─────────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                         │
 │ 1       │ '1.A. Constructor Args:'       │ '#abc123'                               │
-│ 2       │ '2. Tokenizer - tokenize()'    │                                           │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                         │
 │ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"HEXVALUE","value":"#abc123"}' │
-│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'            │
-└─────────┴────────────────────────────────┴───────────────────────────────────────────┘
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'          │
+└─────────┴────────────────────────────────┴─────────────────────────────────────────┘
 
 stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize numbers
 ┌─────────┬────────────────────────────────┬───────────────────────────────────┐
@@ -326,7 +326,7 @@ Test Files  1 passed (1)
 --------------|---------|----------|---------|---------|---------------------
 File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s   
 --------------|---------|----------|---------|---------|---------------------
- All files     |   92.42 |    82.75 |   81.81 |    92.3 |                     
+All files     |   92.42 |    82.75 |   81.81 |    92.3 |                     
  Colors.ts    |     100 |      100 |     100 |     100 |                     
  Print.ts     |   77.27 |    73.68 |      60 |   77.27 | 136,151,168-175,193 
  Tokenizer.ts |     100 |      100 |     100 |     100 |                     
