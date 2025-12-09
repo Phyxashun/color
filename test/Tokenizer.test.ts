@@ -1,9 +1,12 @@
+/// <reference types='../src/types/Tokenizer.d.ts' />
+
 import { describe, it, expect } from 'vitest';
-import Tokenizer, { type Token, TokenType } from '../src/Tokenizer.ts';
-import Parser from '../src/Parser.ts';
+import Tokenizer, { TokenType } from '../src/Tokenizer.ts';
+//import Parser from '../src/Parser.ts';
 
 describe('tokenizer', () => {
     describe('tokenization', () => {
+
         it('should tokenize whitespace', () => {
             const tokenizer = new Tokenizer('   ');
             for (const t of tokenizer.tokens) {
@@ -12,7 +15,7 @@ describe('tokenizer', () => {
         });
 
         it('should tokenize function names', () => {
-            const tokenizer = new Tokenizer('rgb(');
+            const tokenizer = new Tokenizer('rgb');
             const token = tokenizer.tokens[0]
             expect(token.type).toBe(TokenType.FUNCTION);
             expect(token.value).toBe('rgb');
@@ -21,12 +24,12 @@ describe('tokenizer', () => {
         it('should tokenize all function types', () => {
             const functions = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'hwba', 'lab', 'lch', 'oklab', 'oklch', 'hsv', 'hsva', 'cmyk', 'color'];
 
-            functions.forEach(fn => {
-                const tokenizer = new Tokenizer(`${fn}(`);
+            for (const fn of functions) {
+                const tokenizer = new Tokenizer(fn);
                 const token = tokenizer.tokens[0];
                 expect(token.type).toBe(TokenType.FUNCTION);
-                expect(token.value.toLowerCase()).toBe(fn.toLowerCase());
-            });
+                expect(token.value).toBe(fn);
+            }
         });
 
         it('should tokenize hex values', () => {
@@ -52,21 +55,19 @@ describe('tokenizer', () => {
 
         it('should tokenize percentages', () => {
             const tokenizer = new Tokenizer('100%');
-            const num = tokenizer.tokens[0];
-            const percent = tokenizer.tokens[1];
-            expect(num.type).toBe(TokenType.NUMBER);
+            const percent = tokenizer.tokens[0];
             expect(percent.type).toBe(TokenType.PERCENT);
+            expect(percent.value).toBe('100%');
         });
 
         it('should tokenize angle units', () => {
             const units = ['deg', 'rad', 'grad', 'turn'];
-
-            units.forEach(unit => {
+            for (const unit of units) {
                 const tokenizer = new Tokenizer(`120${unit}`);
                 const token = tokenizer.tokens[1];
                 expect(token.type).toBe(TokenType.UNITS);
-                expect(token.value.toLowerCase()).toBe(unit);
-            });
+                expect(token.value).toBe(unit);
+            }
         });
 
         it('should tokenize parentheses', () => {
@@ -98,14 +99,15 @@ describe('tokenizer', () => {
         it('should throw on unexpected characters', () => {
             expect(() => new Tokenizer('@invalid')).toThrow();
         });
+
+        it('should throw on invalid string input', () => {
+            expect(() => new Tokenizer()).toThrow();
+        });
     });
 
     describe('complex tokenization', () => {
         const tokenizer = new Tokenizer('rgb(255, 0, 0)');
         const tokens = tokenizer.tokens;
-
-        console.log("TOKENS:", tokens);
-
         it('should tokenize complete rgb function', () => {
             expect(tokens[0].type).toBe(TokenType.FUNCTION);
             expect(tokens[1].type).toBe(TokenType.LPAREN);

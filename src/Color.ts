@@ -1,3 +1,5 @@
+/src/Color.ts
+
 import ColorParser from "./ColorParser.ts";
 
 const __DEBUG__ = false;
@@ -268,3 +270,4 @@ export default class Color {
         return this.getLuminance() < threshold;
     }
 }
+

@@ -1,66 +1,217 @@
+// Print.ts
+
+/**
+ * This code defines a utility named createPrintInstance that generates a 
+ * callable function, named Print, which acts as a structured logger. It 
+ * allows you to log messages and data in a structured format and display 
+ * them using console.table.
+ * 
+ * Here is how to use it in your project:
+ * 
+ * 1. Import the utility
+ * Assuming the code provided is in a file named PrintUtil.ts (or similar), 
+ * you would import the Print instance:
+ * 
+ **     import Print from './Print.ts';
+ *
+ * 2. Basic Usage (Logging Messages)
+ * You can call Print directly like a function to log data. It accepts an 
+ * optional message string and up to two optional values (value1, value2).
+ * 
+ **     // Log a simple message
+ **     Print("Application starting up.");
+ **     // Output is stored internally until you call Print.log()
+ *
+ * 3. Logging Data (Values and Objects)
+ * The utility intelligently handles different types of inputs, 
+ * automatically using JSON.stringify for objects:
+ * 
+ **     const user = { id: 101, name: "Alice", active: true };
+ **     const details = { loginCount: 42, lastLogin: new Date() };
+ **
+ **     // Log with a message and a single value (number/string/object)
+ **     Print("User logged in:", user.id);
+ **     Print("User details object:", user); // Object is stringified
+ **
+ **     // Log with a message and two values (both objects are stringified)
+ **     Print("User data snapshot:", user, details);
+ *
+ * 4. Viewing the Logs (Print.log())
+ * The data logged via the callable function is stored internally in an 
+ * array until you explicitly call the .log() method. This method outputs 
+ * the collected data using console.table and then clears the internal data 
+ * store.
+ * 
+ **     // After logging the above messages:
+ **     Print.log();
+ *
+ * When Print.log() is called, your console will display a formatted table 
+ * similar to this:
+ * 
+ **     (index)     Message	                            Value1	                                    Value2
+ **     0	        Application starting up.		
+ **     1	        User logged in:	101	
+ **     2	        User details object:	            {"id":101,"name":"Alice","active":true}	
+ **     3	        User data snapshot:	                {"id":101,"name":"Alice","active":true}     {"loginCount":42,"lastLogin":"2025-12-08T..."}
+ *
+ * 5. Accessing the Raw Data (Print.data) 
+ * You can directly access the raw array of logged objects via the .data 
+ * property. You can read from it or assign an entirely new array to it.
+ * 
+ **     // Read the current data array
+ **     console.log(Print.data.length + " entries currently pending log.");
+ **
+ **     // Clear the data manually without logging
+ **     Print.data = [];
+ *
+ */
+
+/**
+ * Interface defining the structure of the Print instance.
+ * Combines a callable function signature with data storage and logging methods.
+ */
 interface PrintInstance {
-    (m?: string, v1?: any, v2?: any): void;
+    /**
+     * Callable function signature for logging messages and values.
+     * @param message - Optional message to log
+     * @param value1 - Optional first value (can be any type)
+     * @param value2 - Optional second value (can be any type)
+     */
+    (message?: string, value1?: any, value2?: any): void;
+
+    /**
+     * Array storing all logged entries until log() is called.
+     * Can be read or set directly for manual data management.
+     */
     data: any[];
+
+    /**
+     * Outputs all accumulated log entries to console.table and clears the data array.
+     */
     log(): void;
 }
 
+/**
+ * Factory function that creates a PrintInstance with internal state management.
+ * Returns a callable function that also has data and log properties.
+ * 
+ * @returns A PrintInstance that can be called as a function and has data/log methods
+ */
 const createPrintInstance = (): PrintInstance => {
+    /**
+     * Internal array storing log entries.
+     * Each entry is an object with Message, Value1, and/or Value2 properties.
+     */
     let internalData: any[] = [];
 
-    const callableFunction = (m?: string, v1?: any, v2?: any): void => {
-        if (!v1 && !v2) {
+    /**
+     * The main callable function that handles logging logic.
+     * Determines the structure of logged data based on the types and presence of arguments.
+     * 
+     * @param message - Optional message string to include in the log entry
+     * @param value1 - Optional first value (objects are JSON.stringified)
+     * @param value2 - Optional second value (objects are JSON.stringified)
+     */
+    const callableFunction = (message?: string, value1?: any, value2?: any): void => {
+        // Case 1: No values provided, only message
+        if (!value1 && !value2) {
             internalData.push({
-                Message: m
-            });
-        } else if (v1 !== null && typeof v1 === 'object' && !v2) {
-            internalData.push({
-                Message: m,
-                Value1: JSON.stringify(v1)
-            });
-        } else if (v1 !== null && typeof v1 === 'object' &&
-            v2 !== null && typeof v2 === 'object') {
-            internalData.push({
-                Message: m,
-                Value1: JSON.stringify(v1),
-                Value2: JSON.stringify(v2)
-            });
-        } else if (!v2) {
-            internalData.push({
-                Message: m,
-                Value1: v1
-            });
-        } else {
-            internalData.push({
-                Message: m,
-                Value1: v1,
-                Value2: v2
+                Message: message,
             });
         }
-    }
+        // Case 2: Single object value provided, no second value
+        else if (value1 !== null && typeof value1 === "object" && !value2) {
+            internalData.push({
+                Message: message,
+                Value1: JSON.stringify(value1),
+            });
+        }
+        // Case 3: Both values are objects
+        else if (
+            value1 !== null &&
+            typeof value1 === "object" &&
+            value2 !== null &&
+            typeof value2 === "object"
+        ) {
+            internalData.push({
+                Message: message,
+                Value1: JSON.stringify(value1),
+                Value2: JSON.stringify(value2),
+            });
+        }
+        // Case 4: Single primitive value (no second value)
+        else if (!value2) {
+            internalData.push({
+                Message: message,
+                Value1: value1,
+            });
+        }
+        // Case 5: Two values where at least one is primitive
+        else {
+            internalData.push({
+                Message: message,
+                Value1: value1,
+                Value2: value2,
+            });
+        }
+    };
 
-    Object.defineProperty(callableFunction, 'data', {
+    /**
+     * Define a getter/setter property 'data' on the callable function.
+     * Allows external access to read or replace the internal data array.
+     */
+    Object.defineProperty(callableFunction, "data", {
+        /**
+         * Getter: Returns the current internal data array
+         */
         get() {
             return internalData;
         },
+        /**
+         * Setter: Replaces the internal data array with a new array
+         * @param newData - The new array to set as internal data
+         */
         set(newData: any[]) {
             internalData = newData;
         },
         enumerable: true,
-        configurable: true
+        configurable: true,
     });
 
+    /**
+     * Attach the log method to the callable function.
+     * Outputs the accumulated data to console.table and clears the internal array.
+     */
     callableFunction.log = () => {
         if (internalData.length > 0) {
+            // Display all log entries in a formatted table
             console.table(internalData);
-            internalData = []; // clear internal data after log() call
+            // Clear the internal data after displaying
+            internalData = [];
         } else {
-            console.log("No information is currently loaded into the table.")
+            // Inform the user that there's no data to display
+            console.log("No information is currently loaded into the table.");
         }
     };
 
+    // Cast and return the enhanced function as a PrintInstance
     return callableFunction as PrintInstance;
 };
 
+/**
+ * The singleton Print instance, ready to use throughout your application.
+ * Import and use this instance for structured logging.
+ * 
+ * @example
+ * ```typescript
+ * import Print from './Print';
+ * 
+ * Print("Starting process");
+ * Print("User ID:", 123);
+ * Print("User data:", { name: "Alice", age: 30 });
+ * Print.log(); // Displays all entries in console.table
+ * ```
+ */
 const Print = createPrintInstance();
 
 export default Print;

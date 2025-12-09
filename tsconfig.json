@@ -1,8 +1,9 @@
+// tsconfig.json
 {
     // Visit https://aka.ms/tsconfig to read more about this file
     "compilerOptions": {
         // File Layout
-        "outDir": "./dist",
+        "rootDir": "./",
         // Environment Settings
         "module": "esnext",
         "target": "esnext",
@@ -29,15 +30,15 @@
         "esModuleInterop": true
     },
     "include": [
-        "./",
         "./index.ts",
         "./globals.d.ts",
         "src/**/*.ts",
+        "src/types/**/*.d.ts",
     ],
     "exclude": [
         ".vscode",
         "node_modules",
-        "dist",
+        "coverage",
         "test",
         ".gitignore"
     ]

@@ -1,0 +1,333 @@
+RERUN  test/Tokenizer.test.ts x1 
+
+stdout | test/Tokenizer.test.ts
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'rgb(255, 0, 0)'                  │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"rgb"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"LPAREN","value":"("}'     │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"255"}'   │
+│ 6       │ '2.B. Tokenizer - tokens:'     │ '{"type":"COMMA","value":","}'      │
+│ 7       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"0"}'     │
+│ 8       │ '2.B. Tokenizer - tokens:'     │ '{"type":"COMMA","value":","}'      │
+│ 9       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"0"}'     │
+│ 10      │ '2.B. Tokenizer - tokens:'     │ '{"type":"RPAREN","value":")"}'     │
+│ 11      │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize whitespace
+┌─────────┬────────────────────────────────┬────────────────────────────────┐
+│ (index) │ Message                        │ Value1                         │
+├─────────┼────────────────────────────────┼────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                │
+│ 1       │ '1.A. Constructor Args:'       │ '   '                          │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}' │
+└─────────┴────────────────────────────────┴────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize function names
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'rgb'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"rgb"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize all function types
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'rgb'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"rgb"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬──────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                               │
+├─────────┼────────────────────────────────┼──────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                      │
+│ 1       │ '1.A. Constructor Args:'       │ 'rgba'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                      │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"rgba"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'       │
+└─────────┴────────────────────────────────┴──────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'hsl'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hsl"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬──────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                               │
+├─────────┼────────────────────────────────┼──────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                      │
+│ 1       │ '1.A. Constructor Args:'       │ 'hsla'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                      │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hsla"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'       │
+└─────────┴────────────────────────────────┴──────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'hwb'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hwb"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬──────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                               │
+├─────────┼────────────────────────────────┼──────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                      │
+│ 1       │ '1.A. Constructor Args:'       │ 'hwba'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                      │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hwba"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'       │
+└─────────┴────────────────────────────────┴──────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'lab'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"lab"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'lch'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"lch"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                                │
+├─────────┼────────────────────────────────┼───────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                       │
+│ 1       │ '1.A. Constructor Args:'       │ 'oklab'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                       │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"oklab"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'        │
+└─────────┴────────────────────────────────┴───────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                                │
+├─────────┼────────────────────────────────┼───────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                       │
+│ 1       │ '1.A. Constructor Args:'       │ 'oklch'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                       │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"oklch"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'        │
+└─────────┴────────────────────────────────┴───────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ 'hsv'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hsv"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬──────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                               │
+├─────────┼────────────────────────────────┼──────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                      │
+│ 1       │ '1.A. Constructor Args:'       │ 'hsva'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                      │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"hsva"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'       │
+└─────────┴────────────────────────────────┴──────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬──────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                               │
+├─────────┼────────────────────────────────┼──────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                      │
+│ 1       │ '1.A. Constructor Args:'       │ 'cmyk'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                      │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"cmyk"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'       │
+└─────────┴────────────────────────────────┴──────────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                                │
+├─────────┼────────────────────────────────┼───────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                       │
+│ 1       │ '1.A. Constructor Args:'       │ 'color'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                       │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"FUNCTION","value":"color"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'        │
+└─────────┴────────────────────────────────┴───────────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize hex values
+┌─────────┬────────────────────────────────┬───────────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                                    │
+├─────────┼────────────────────────────────┼───────────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                           │
+│ 1       │ '1.A. Constructor Args:'       │ '#abc123'                               │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                           │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"HEXVALUE","value":"#abc123"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'            │
+└─────────┴────────────────────────────────┴───────────────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize numbers
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '255'                             │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"255"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize decimal numbers
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '0.5'                             │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"0.5"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize percentages
+┌─────────┬────────────────────────────────┬─────────────────────────────────────┐
+│ (index) │ Message                        │ Value1                              │
+├─────────┼────────────────────────────────┼─────────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                     │
+│ 1       │ '1.A. Constructor Args:'       │ '100%'                              │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                     │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"PERCENT","value":"100%"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'      │
+└─────────┴────────────────────────────────┴─────────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize angle units
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '120deg'                          │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"120"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"UNITS","value":"deg"}'  │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '120rad'                          │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"120"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"UNITS","value":"rad"}'  │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '120grad'                         │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"120"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"UNITS","value":"grad"}' │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+┌─────────┬────────────────────────────────┬───────────────────────────────────┐
+│ (index) │ Message                        │ Value1                            │
+├─────────┼────────────────────────────────┼───────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                   │
+│ 1       │ '1.A. Constructor Args:'       │ '120turn'                         │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                   │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"NUMBER","value":"120"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"UNITS","value":"turn"}' │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'    │
+└─────────┴────────────────────────────────┴───────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize parentheses
+┌─────────┬────────────────────────────────┬─────────────────────────────────┐
+│ (index) │ Message                        │ Value1                          │
+├─────────┼────────────────────────────────┼─────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                 │
+│ 1       │ '1.A. Constructor Args:'       │ '()'                            │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                 │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"LPAREN","value":"("}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"RPAREN","value":")"}' │
+│ 5       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}'  │
+└─────────┴────────────────────────────────┴─────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize comma
+┌─────────┬────────────────────────────────┬────────────────────────────────┐
+│ (index) │ Message                        │ Value1                         │
+├─────────┼────────────────────────────────┼────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                │
+│ 1       │ '1.A. Constructor Args:'       │ ','                            │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"COMMA","value":","}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}' │
+└─────────┴────────────────────────────────┴────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should tokenize slash
+┌─────────┬────────────────────────────────┬────────────────────────────────┐
+│ (index) │ Message                        │ Value1                         │
+├─────────┼────────────────────────────────┼────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                │
+│ 1       │ '1.A. Constructor Args:'       │ '/'                            │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"SLASH","value":"/"}' │
+│ 4       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}' │
+└─────────┴────────────────────────────────┴────────────────────────────────┘
+
+stdout | test/Tokenizer.test.ts > tokenizer > tokenization > should return EOF at end of input
+┌─────────┬────────────────────────────────┬────────────────────────────────┐
+│ (index) │ Message                        │ Value1                         │
+├─────────┼────────────────────────────────┼────────────────────────────────┤
+│ 0       │ '1. Tokenizer - Constructor()' │                                │
+│ 1       │ '1.A. Constructor Args:'       │                                │
+│ 2       │ '2. Tokenizer - tokenize()'    │                                │
+│ 3       │ '2.B. Tokenizer - tokens:'     │ '{"type":"EOF","value":"EOF"}' │
+└─────────┴────────────────────────────────┴────────────────────────────────┘
+
+✓  tokenizer  test/Tokenizer.test.ts (15 tests) 9ms
+    ✓ tokenizer (15)
+        ✓ tokenization (14)
+            ✓ should tokenize whitespace 1ms
+            ✓ should tokenize function names 0ms
+            ✓ should tokenize all function types 2ms
+            ✓ should tokenize hex values 0ms
+            ✓ should tokenize numbers 0ms
+            ✓ should tokenize decimal numbers 0ms
+            ✓ should tokenize percentages 0ms
+            ✓ should tokenize angle units 1ms
+            ✓ should tokenize parentheses 0ms
+            ✓ should tokenize comma 0ms
+            ✓ should tokenize slash 0ms
+            ✓ should return EOF at end of input 0ms
+            ✓ should throw on unexpected characters 1ms
+            ✓ should throw on invalid string input 0ms
+        ✓ complex tokenization (1)
+            ✓ should tokenize complete rgb function 0ms
+
+Test Files  1 passed (1)
+     Tests  15 passed (15)
+  Start at  22:46:16
+  Duration  29ms
+
+ % Coverage report from v8
+--------------|---------|----------|---------|---------|---------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s   
+--------------|---------|----------|---------|---------|---------------------
+ All files     |   92.42 |    82.75 |   81.81 |    92.3 |                     
+ Colors.ts    |     100 |      100 |     100 |     100 |                     
+ Print.ts     |   77.27 |    73.68 |      60 |   77.27 | 136,151,168-175,193 
+ Tokenizer.ts |     100 |      100 |     100 |     100 |                     
+--------------|---------|----------|---------|---------|---------------------

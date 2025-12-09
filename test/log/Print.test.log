@@ -1,0 +1,53 @@
+RERUN  test/Print.test.ts x1 
+
+✓  tokenizer  test/Print.test.ts (28 tests) 12ms
+    ✓ Print Utility (28)
+        ✓ Basic Logging (5)
+            ✓ should log a message without values 3ms
+            ✓ should log a message with a primitive value 0ms
+            ✓ should log a message with a string value 0ms
+            ✓ should log a message with two primitive values 0ms
+            ✓ should handle undefined message 0ms
+        ✓ Object Handling (4)
+            ✓ should stringify a single object value 0ms
+            ✓ should stringify two object values 0ms
+            ✓ should handle nested objects 0ms
+            ✓ should handle arrays as objects 0ms
+        ✓ Mixed Type Handling (3)
+            ✓ should handle primitive value1 and object value2 0ms
+            ✓ should handle object value1 and primitive value2 0ms
+            ✓ should handle boolean values 0ms
+        ✓ Multiple Entries (1)
+            ✓ should accumulate multiple log entries 0ms
+        ✓ Print.log() Method (4)
+            ✓ should call console.table with data and clear the array 1ms
+            ✓ should display message when no data is present 0ms
+            ✓ should clear data after logging 0ms
+            ✓ should allow logging again after clear 0ms
+        ✓ Print.data Property (4)
+            ✓ should allow direct read access to data 0ms
+            ✓ should allow direct write access to data 0ms
+            ✓ should allow setting custom data array 0ms
+            ✓ should maintain reference after setting 0ms
+        ✓ Edge Cases (6)
+            ✓ should handle null values 0ms
+            ✓ should handle empty string 0ms
+            ✓ should handle zero values 0ms
+            ✓ should handle Date objects 0ms
+            ✓ should handle empty object 0ms
+            ✓ should handle empty array 0ms
+        ✓ Type Safety (1)
+            ✓ should work with TypeScript types 0ms
+
+Test Files  1 passed (1)
+     Tests  28 passed (28)
+  Start at  22:42:39
+  Duration  32ms
+
+ % Coverage report from v8
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+ All files |     100 |      100 |     100 |     100 |                   
+ Print.ts |     100 |      100 |     100 |     100 |                   
+----------|---------|----------|---------|---------|-------------------
