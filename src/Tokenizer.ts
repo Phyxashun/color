@@ -1,33 +1,6 @@
 /// <reference types='./types/Tokenizer.d.ts' />
 
-//src/Tokenizer.ts
-
-const __DEBUG__ = true;
-
-import { ConsoleColors } from './Colors.ts';
 import Print from './Print.ts';
-
-/* Regular Expressions */
-/*
-const RX = {
-    ALPHA: /[a-zA-Z]+/i,
-    NUMBER: /[\d]/i,
-    HASH: /[#]/i,
-    EXPONENT: /e/i,
-    KEYWORD: /^(#|rgba?|hsla?|hwba?|lab|lch|oklab|oklch)+\b/i,
-    IDENTIFIER: /(deg|grad|rad|turn)/i,
-    OPERATOR: /[%.\-]/i,
-    DELIMITER: /[\(\),\/]/i,
-    INTEGER: /[-+]?\d+/i,
-    FLOAT: /[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?/i,
-    DOUBLEQUOTE: /"(?:[^"\\]|\\.)*"/i,
-    SINGLEQUOTE: /'(?:[^'\\]|\\.)*'/i,
-    BOOLEAN: /\b(true|false)\b/i,
-    WHITESPACE: /\s+/i,
-    COMMENTS: /\/\*[^]*?\*\/|\/\/[^\n]+/i,
-    EOL: /\n|$/i,
-    ANSICOLORS = /\x1b\[[0-9;]*m/g;
-} as const; //*/
 
 export const TokenType: Record<TokenType, TokenType> = {
     FUNCTION: 'FUNCTION',           // 'rgba', 'rgb', 'hsl', etc.
@@ -65,9 +38,6 @@ export default class Tokenizer {
     private cursor: number = 0;
     tokens: Token[] = [];
 
-    //
-    // 1. TOKENIZER CONSTRUCTOR()
-    //
     constructor(...args: any[]) {
         Print('1. Tokenizer - Constructor()');
 
@@ -77,7 +47,7 @@ export default class Tokenizer {
         Print('1.A. Constructor Args:', this.source);
 
         this.tokens = this.tokenize();
-        if (__DEBUG__) Print.log();
+        Print.log();
     }
 
     private validateSource(...args: any) {
@@ -91,9 +61,6 @@ export default class Tokenizer {
         return this.cursor >= this.source.length;
     }
 
-    //
-    // 2. Tokenize()
-    //
     private tokenize(): Token[] {
         Print('2. Tokenizer - tokenize()');
 
@@ -135,7 +102,7 @@ export default class Tokenizer {
         }
     }
 
-    private throwError() {
+    private throwError(): void {
         let errorMsg = `Tokenizer.tokenize(): `;
         errorMsg += `Unexpected character: ${this.source[this.cursor]}, `;
         errorMsg += `at position: ${this.cursor}.`;
