@@ -16,7 +16,7 @@
  *
  * 2. Basic Usage (Logging Messages)
  * You can call Print directly like a function to log data. It accepts an 
- * optional message string and up to two optional values (value1, value2).
+ * optional message string and up to two optional values (value, value2).
  * 
  **     // Log a simple message
  **     Print("Application starting up.");
@@ -48,7 +48,7 @@
  * When Print.log() is called, your console will display a formatted table 
  * similar to this:
  * 
- **     (index)     Message	                            Value1	                                    Value2
+ **     (index)     message	                            value	                                    Value2
  **     0	        Application starting up.		
  **     1	        User logged in:	101	
  **     2	        User details object:	            {"id":101,"name":"Alice","active":true}	
@@ -66,6 +66,11 @@
  *
  */
 
+interface PrintEntry {
+    message: string;
+    value?: any;
+}
+
 /**
  * Interface defining the structure of the Print instance.
  * Combines a callable function signature with data storage and logging methods.
@@ -74,16 +79,16 @@ interface PrintInstance {
     /**
      * Callable function signature for logging messages and values.
      * @param message - Optional message to log
-     * @param value1 - Optional first value (can be any type)
+     * @param value - Optional first value (can be any type)
      * @param value2 - Optional second value (can be any type)
      */
-    add(message?: string, value1?: any, value2?: any): void;
+    add(message?: string, value?: any, value2?: any): void;
 
     /**
      * Array storing all logged entries until log() is called.
      * Can be read or set directly for manual data management.
      */
-    data: any[];
+    data: PrintEntry[];
 
     /**
      * Outputs all accumulated log entries to console.table and clears the data array.
@@ -100,9 +105,9 @@ interface PrintInstance {
 const createPrintInstance = (): PrintInstance => {
     /**
      * Internal array storing log entries.
-     * Each entry is an object with Message, Value1, and/or Value2 properties.
+     * Each entry is an object with message, value, and/or Value2 properties.
      */
-    let internalData: any[] = [];
+    let internalData: PrintEntry[] = [];
 
     /**
      * Attach the log method to the callable function.
@@ -125,49 +130,32 @@ const createPrintInstance = (): PrintInstance => {
      * Determines the structure of logged data based on the types and presence of arguments.
      * 
      * @param message - Optional message string to include in the log entry
-     * @param value1 - Optional first value (objects are JSON.stringified)
-     * @param value2 - Optional second value (objects are JSON.stringified)
+     * @param value - Optional first value (objects are JSON.stringified)
      */
-    callableFunction.add = (message?: string, value1?: any, value2?: any): void => {
+    callableFunction.add = (message: string, value?: any): void => {
+        // Not needed, but just in case
+        if (!message && message !== '') {
+            throw new SyntaxError('Print.add() utility expects a message string.');
+        }
+
         // Case 1: No values provided, only message
-        if (!value1 && !value2) {
+        if (value === undefined) {
             internalData.push({
-                Message: message,
+                message: message,
             });
         }
-        // Case 2: Single object value provided, no second value
-        else if (value1 !== null && typeof value1 === "object" && !value2) {
+        // Case 2: Single object value provided
+        else if (value !== null && typeof value === "object") {
             internalData.push({
-                Message: message,
-                Value1: JSON.stringify(value1),
+                message: message,
+                value: JSON.stringify(value),
             });
         }
-        // Case 3: Both values are objects
-        else if (
-            value1 !== null &&
-            typeof value1 === "object" &&
-            value2 !== null &&
-            typeof value2 === "object"
-        ) {
-            internalData.push({
-                Message: message,
-                Value1: JSON.stringify(value1),
-                Value2: JSON.stringify(value2),
-            });
-        }
-        // Case 4: Single primitive value (no second value)
-        else if (!value2) {
-            internalData.push({
-                Message: message,
-                Value1: value1,
-            });
-        }
-        // Case 5: Two values where at least one is primitive
+        // Case 3: Single primitive value
         else {
             internalData.push({
-                Message: message,
-                Value1: value1,
-                Value2: value2,
+                message: message,
+                value: value,
             });
         }
     };
@@ -206,10 +194,10 @@ const createPrintInstance = (): PrintInstance => {
  * ```typescript
  * import Print from './Print';
  * 
- * Print("Starting process");
- * Print("User ID:", 123);
- * Print("User data:", { name: "Alice", age: 30 });
- * Print.log(); // Displays all entries in console.table
+ * Print.add("Starting process");
+ * Print.add("User ID:", 123);
+ * Print.add("User data:", { name: "Alice", age: 30 });
+ * Print(); // Displays all entries in console.table
  * ```
  */
 export const Print: PrintInstance = createPrintInstance();

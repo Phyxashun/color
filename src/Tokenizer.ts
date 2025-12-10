@@ -76,14 +76,14 @@ const createTokenSpec = (): TokenSpec => {
         [TokenType.IDENTIFIER, /^[-\w][a-z_][a-z\d_-]*/i],
 
         // Fallback to catch any character not matched. This indicates an error.
-        [TokenType.DELIMITER, /[^\w\s]/i],
+        [TokenType.DELIMITER, /[;\-]+/],
 
         // Fallback to catch any character not matched. This indicates an error.
         [TokenType.CHAR, /^./],
     ] as const;
 };
 
-// Create the specification once
+// Create the token specification
 export const TokenSpec: TokenSpec = createTokenSpec();
 
 export default class Tokenizer {
@@ -107,6 +107,9 @@ export default class Tokenizer {
         Print();
     }
 
+    /**
+     * Returns true if the cursor is at the end of source.
+     */
     private isEOF() {
         return this.cursor >= this.source.length;
     }

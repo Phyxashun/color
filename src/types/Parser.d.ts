@@ -3,16 +3,16 @@
 type HexValue = `#${string}`;
 type Units = 'deg' | 'grad' | 'rad' | 'turn';
 
-type NodeType = {
-    start: '<start>',
-    color: '<color>',
-    hex: '<hex-color>',
-    function: '<function-color>',
-    channels: '<channels-list>',
-    space: '<space-list>',
-    comma: '<comma-list>',
-    value: '<value>',
-    alpha: '<alpha>',
+declare enum NodeType {
+    start = '<start>',
+    color = '<color>',
+    hex = '<hex-color>',
+    function = '<function-color>',
+    channels = '<channels-list>',
+    space = '<space-list>',
+    comma = '<comma-list>',
+    value = '<value>',
+    alpha = '<alpha>',
 }
 
 type NodeTypeKey =

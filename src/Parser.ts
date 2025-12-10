@@ -4,35 +4,67 @@
 
 import Tokenizer, { TokenType } from "./Tokenizer.ts";
 
-export const NodeType: NodeType = {
-    start: '<start>',
-    color: '<color>',
-    hex: '<hex-color>',
-    function: '<function-color>',
-    channels: '<channels-list>',
-    space: '<space-list>',
-    comma: '<comma-list>',
-    value: '<value>',
-    alpha: '<alpha>',
-} as const;
-
-abstract class BaseNode {
-    public abstract value: NodeValue;
-    constructor(public type: NodeTypeValue) {
-        this.type = type;
-    }
-    abstract toString(): string;
+export enum NodeType {
+    start = '<start>',
+    color = '<color>',
+    hex = '<hex-color>',
+    function = '<function-color>',
+    channels = '<channels-list>',
+    space = '<space-list>',
+    comma = '<comma-list>',
+    value = '<value>',
+    alpha = '<alpha>',
 }
 
-export class Node extends BaseNode {
-    constructor(public type: NodeTypeValue, public value: NodeValue) {
-        super(type);
-        this.value = value;
-    }
-    toString(): string {
-        return JSON.stringify(this, null, 2);
-    }
-}
+type RHS = readonly (TokenType | NodeType)[];
+type GrammarRule = readonly [NodeType, RHS];
+
+export const NodeSpec: readonly GrammarRule[] = [
+    // <start> ::= <color> EOF
+    [NodeType.start, [NodeType.color, TokenType.EOF]],
+
+    // <color> ::= <hex-color>
+    [NodeType.color, [NodeType.hex]],
+
+    // <color> ::= <function-color>
+    [NodeType.color, [NodeType.function]],
+
+    // <hex-color> - Fixed to use HEXVALUE instead of HASH
+    [NodeType.hex, [TokenType.HEXVALUE]],
+
+    // <function-color> ::= FUNCTION '(' <channels> ')'
+    [NodeType.function, [TokenType.FUNCTION, TokenType.LPAREN, NodeType.channels, TokenType.RPAREN]],
+
+    // channels: space-list OR comma-list
+    [NodeType.channels, [NodeType.space]],
+    [NodeType.channels, [NodeType.comma]],
+
+    // <space-list> ::= value value value
+    [NodeType.space, [NodeType.value, NodeType.value, NodeType.value]],
+
+    // <space-list> ::= value value value alpha
+    [NodeType.space, [NodeType.value, NodeType.value, NodeType.value, NodeType.alpha]],
+
+    // <comma-list> ::= value , value , value
+    [NodeType.comma, [NodeType.value, TokenType.COMMA, NodeType.value, TokenType.COMMA, NodeType.value]],
+
+    // <comma-list> ::= value , value , value alpha
+    [NodeType.comma, [NodeType.value, TokenType.COMMA, NodeType.value, TokenType.COMMA, NodeType.value, NodeType.alpha]],
+
+    // alpha ::= '/' value
+    [NodeType.alpha, [TokenType.SLASH, NodeType.value]],
+    // alpha ::= ',' value
+    [NodeType.alpha, [TokenType.COMMA, NodeType.value]],
+
+    // <value> ::= percentage
+    [NodeType.value, [TokenType.PERCENT]],
+
+    // <value> ::= number units
+    [NodeType.value, [TokenType.NUMBER, TokenType.UNITS]],
+
+    // <value> ::= number
+    [NodeType.value, [TokenType.NUMBER]],
+] as const;
 
 export default class Parser {
     private tokenizer: Tokenizer;
@@ -47,7 +79,6 @@ export default class Parser {
      * @returns AST representing the parsed color
      */
     parse(): StartNode {
-        // Parse recursively starting from the main entry point
         return this.Start();
     }
 
@@ -70,16 +101,16 @@ export default class Parser {
     private Color(): ColorNode {
         let value: HexNode | FunctionNode;
 
-        // Use tokenizer.current() to check the token type.
         const currentToken = this.tokenizer.current();
 
-        if (currentToken.type === TokenType.HASH) {
+        // Fixed: Check for HEXVALUE instead of HASH
+        if (currentToken.type === TokenType.HEXVALUE) {
             value = this.HexColor();
         } else if (currentToken.type === TokenType.FUNCTION) {
             value = this.FunctionColor();
         } else {
             throw new SyntaxError(
-                `Unexpected token: "${currentToken.value}", expected HASH or FUNCTION`
+                `Unexpected token: "${currentToken.value || currentToken.type}", expected HEXVALUE or FUNCTION`
             );
         }
 
@@ -91,20 +122,20 @@ export default class Parser {
     }
 
     /**
-     * <hexcolor> ::= HASH HEXVALUE
+     * <hexcolor> ::= HEXVALUE
      */
     private HexColor(): HexNode {
-        this.eat(TokenType.HASH);
-        const hexValue = this.eat(TokenType.HEXVALUE);
+        const hexToken = this.eat(TokenType.HEXVALUE);
 
         return {
             type: NodeType.hex,
-            value: `#${hexValue.value}` as HexValue,
+            value: hexToken.value as HexValue,
+            toString: () => hexToken.value,
         };
     }
 
     /**
-     * <function-color> ::= FUNCTION <channels-list> RPAREN
+     * <function-color> ::= FUNCTION LPAREN <channels> RPAREN
      */
     private FunctionColor(): FunctionNode {
         const functionToken = this.eat(TokenType.FUNCTION);
@@ -116,19 +147,18 @@ export default class Parser {
             type: NodeType.function,
             name: functionToken.value as ColorModel,
             value: channels,
+            toString: () => `${functionToken.value}(${channels.toString()})`,
         };
     }
 
     /**
-     * <channels-list> ::= <space-separated-list>
-     * <channels-list> ::= <comma-separated-list>
+     * <channels-list> ::= <space-separated-list> | <comma-separated-list>
      */
     private ChannelsList(): ChannelsNode {
         let value: SpaceNode | CommaNode;
 
         // Special handling for color() function with color space identifier
         if (this.tokenizer.current().type === TokenType.IDENTIFIER) {
-            // Consume the color space name (e.g., "display-p3", "srgb")
             this.eat(TokenType.IDENTIFIER);
         }
 
@@ -136,28 +166,25 @@ export default class Parser {
         const firstValue = this.Value();
 
         if (this.tokenizer.current().type === TokenType.COMMA) {
-            // Comma-separated list
             value = this.CommaSeparatedListContinuation(firstValue);
         } else {
-            // Space-separated list
             value = this.SpaceSeparatedListContinuation(firstValue);
         }
 
         return {
             type: NodeType.channels,
             value,
+            toString: () => value.toString(),
         };
     }
 
     /**
-     * <space-separated-list> ::= <value> <value> <value> <alpha-channel>
-     * Special case for CMYK: <value> <value> <value> <value>
+     * <space-separated-list> ::= <value> <value> <value> [<alpha-channel>]
      */
     private SpaceSeparatedListContinuation(firstValue: ValueNode): SpaceNode {
         const secondValue = this.Value();
         const thirdValue = this.Value();
 
-        // Check if there's a 4th value (for CMYK) or alpha channel
         let alpha: AlphaNode | undefined = undefined;
 
         if (this.tokenizer.current().type === TokenType.SLASH) {
@@ -166,14 +193,26 @@ export default class Parser {
                 type: NodeType.space,
                 value: [firstValue, secondValue, thirdValue],
                 alpha,
+                toString: () => {
+                    const vals = [firstValue, secondValue, thirdValue]
+                        .map(v => v.toString?.() || String(v.value))
+                        .join(' ');
+                    return alpha ? `${vals} / ${alpha.toString?.() || String(alpha.value)}` : vals;
+                },
             };
-        } else if (this.tokenizer.current().type === TokenType.NUMBER) {
+        } else if (
+            this.tokenizer.current().type === TokenType.NUMBER ||
+            this.tokenizer.current().type === TokenType.PERCENT
+        ) {
             // CMYK has 4 values
             const fourthValue = this.Value();
             return {
                 type: NodeType.space,
                 value: [firstValue, secondValue, thirdValue, fourthValue],
                 alpha: undefined,
+                toString: () => [firstValue, secondValue, thirdValue, fourthValue]
+                    .map(v => v.toString?.() || String(v.value))
+                    .join(' '),
             };
         }
 
@@ -181,12 +220,14 @@ export default class Parser {
             type: NodeType.space,
             value: [firstValue, secondValue, thirdValue],
             alpha: undefined,
+            toString: () => [firstValue, secondValue, thirdValue]
+                .map(v => v.toString?.() || String(v.value))
+                .join(' '),
         };
     }
 
     /**
-     * <comma-separated-list> ::= <value> COMMA <value> COMMA <value> <optional-alpha>
-     * Special case for CMYK: <value> COMMA <value> COMMA <value> COMMA <value>
+     * <comma-separated-list> ::= <value> COMMA <value> COMMA <value> [<alpha>]
      */
     private CommaSeparatedListContinuation(firstValue: ValueNode): CommaNode {
         this.eat(TokenType.COMMA);
@@ -196,34 +237,43 @@ export default class Parser {
         const thirdValue = this.Value();
 
         let alpha: AlphaNode | undefined = undefined;
+        let fourthValue: ValueNode | undefined = undefined;
 
         if (this.tokenizer.current().type === TokenType.COMMA) {
             this.eat(TokenType.COMMA);
 
-            if (this.tokenizer.lookahead().type === TokenType.SLASH) alpha = this.AlphaChannel();
-
-            // Check if we're at the end (CMYK with 4 values)
-            if (this.tokenizer.current().type === TokenType.RPAREN || this.tokenizer.current().type === TokenType.EOF) {
-                // This is CMYK with 4 values, no alpha
-                return {
-                    type: NodeType.comma,
-                    value: [firstValue, secondValue, thirdValue, alpha] as [ValueNode, ValueNode, ValueNode, ValueNode],
-                    alpha: alpha,
-                };
-            } else {
-                // This is alpha channel
-                alpha = {
-                    type: NodeType.alpha,
-                    value: this.AlphaChannel(),
-                    valueType: 'number',
-                };
+            // Check if next is alpha (slash) or fourth value
+            if (this.tokenizer.current().type === TokenType.SLASH) {
+                alpha = this.AlphaChannel();
+            } else if (
+                this.tokenizer.current().type === TokenType.NUMBER ||
+                this.tokenizer.current().type === TokenType.PERCENT
+            ) {
+                fourthValue = this.Value();
             }
+        }
+
+        if (fourthValue) {
+            return {
+                type: NodeType.comma,
+                value: [firstValue, secondValue, thirdValue, fourthValue],
+                alpha: undefined,
+                toString: () => [firstValue, secondValue, thirdValue, fourthValue]
+                    .map(v => v.toString?.() || String(v.value))
+                    .join(', '),
+            };
         }
 
         return {
             type: NodeType.comma,
             value: [firstValue, secondValue, thirdValue],
             alpha,
+            toString: () => {
+                const vals = [firstValue, secondValue, thirdValue]
+                    .map(v => v.toString?.() || String(v.value))
+                    .join(', ');
+                return alpha ? `${vals}, ${alpha.toString?.() || String(alpha.value)}` : vals;
+            },
         };
     }
 
@@ -233,49 +283,54 @@ export default class Parser {
     private AlphaChannel(): AlphaNode {
         this.eat(TokenType.SLASH);
         const value = this.Value();
-        let valueType: 'number' | 'percentage' = 'number';
 
         return {
             type: NodeType.alpha,
             value,
-            valueType,
+            valueType: value.valueType || 'number',
+            toString: () => value.toString?.() || String(value.value),
         };
     }
 
     /**
-     * <value> ::= NUMBER
-     * <value> ::= NUMBER PERCENT
-     * <value> ::= NUMBER ANGLE
+     * <value> ::= NUMBER | PERCENT | NUMBER UNITS
      */
     private Value(): ValueNode {
-        const numberToken = this.eat(TokenType.NUMBER);
-        const numValue = typeof numberToken.value === 'string' ? parseFloat(numberToken.value) : numberToken.value;
+        const tok = this.tokenizer.current();
 
-        let valueType: 'number' | 'percentage' | 'angle' = 'number';
-        let units: '%' | Units | undefined = undefined;
-
-        // Check for percentage
-        if (this.tokenizer.current().type === TokenType.PERCENT) {
-            this.eat(TokenType.PERCENT);
-            valueType = 'percentage';
-            units = '%';
+        // percentage
+        if (tok.type === TokenType.PERCENT) {
+            const t = this.eat(TokenType.PERCENT);
+            return {
+                type: NodeType.value,
+                valueType: 'percentage',
+                value: parseFloat(t.value),
+                units: '%',
+                toString: () => `${parseFloat(t.value)}%`,
+            };
         }
-        // Check for angle units
-        else if (this.tokenizer.current().type === TokenType.UNITS) {
-            const unitsToken = this.eat(TokenType.UNITS);
-            const unitsValue = unitsToken.value as string;
 
-            if (['deg', 'rad', 'grad', 'turn'].includes(unitsValue)) {
-                valueType = 'angle';
-                units = unitsValue as Units;
-            }
+        // number-based value
+        const numTok = this.eat(TokenType.NUMBER);
+        const num = parseFloat(numTok.value);
+
+        // angle unit?
+        if (this.tokenizer.current().type === TokenType.UNITS) {
+            const u = this.eat(TokenType.UNITS).value as Units;
+            return {
+                type: NodeType.value,
+                valueType: 'angle',
+                value: num,
+                units: u,
+                toString: () => `${num}${u}`,
+            };
         }
 
         return {
             type: NodeType.value,
-            valueType,
-            value: numValue as number,
-            units,
+            valueType: 'number',
+            value: num,
+            toString: () => String(num),
         };
     }
 
@@ -284,11 +339,10 @@ export default class Parser {
 
         if (token.type !== tokenType) {
             throw new SyntaxError(
-                `Unexpected token: current token: "${token.value} (${token.type})", expected: "${tokenType}"`
+                `Unexpected token: current token: "${token.value || token.type} (${token.type})", expected: "${tokenType}"`
             );
         }
 
-        // Advance the tokenizer to the next token.
         this.tokenizer.consume();
         return token;
     }
