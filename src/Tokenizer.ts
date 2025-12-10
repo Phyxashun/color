@@ -59,17 +59,17 @@ export default class Tokenizer {
     private tokenIndex: number = 0;
 
     constructor(string: string) {
-        Print('1. Tokenizer - Constructor()');
+        Print.add('1. Tokenizer - Constructor()');
 
         if (typeof string !== 'string') {
             throw new Error('Tokenizer validateSource(): Class expects a string...');
         }
         this.source = string;
 
-        Print('1.A. Constructor Args:', this.source);
+        Print.add('1.A. Constructor Args:', this.source);
 
         this.tokens = this._tokenize();
-        Print.log();
+        Print();
     }
 
     /**
@@ -118,7 +118,7 @@ export default class Tokenizer {
 
     // This internal method contains the tokenization logic
     private _tokenize(): Token[] {
-        Print('2. Tokenizer - tokenize()');
+        Print.add('2. Tokenizer - tokenize()');
 
         const tokens: Token[] = [];
         let cursor = 0;
@@ -155,7 +155,7 @@ export default class Tokenizer {
         tokens.push({ type: TokenType.EOF, value: 'EOF' });
 
         for (const token of tokens) {
-            Print('2.B. Tokenizer - tokens:', token);
+            Print.add('2.B. Tokenizer - tokens:', token);
         }
         return tokens;
     }

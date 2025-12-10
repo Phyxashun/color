@@ -1103,7 +1103,7 @@ describe('Parser', () => {
 //*/
 
 // Mock the Print module to avoid errors during testing
-vi.mock('../src/Print.ts');
+//vi.mock('../src/Print.ts');
 
 describe('Tokenizer', () => {
 
