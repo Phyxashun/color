@@ -1,81 +1,123 @@
 /// <reference types='./types/Tokenizer.d.ts' />
+// /src/Tokenizer.ts
 
-import Print from './Print.ts';
+import { Colors } from './Colors.ts';
+import { Print } from './Print.ts';
 
-export const TokenType: TokenType = {
-    FUNCTION: 'FUNCTION',           // 'rgba', 'rgb', 'hsl', etc.
-    IDENTIFIER: 'IDENTIFIER',       // Any word/letter not already captured 
-    HASH: 'HASH',                   // '#'
-    HEXVALUE: 'HEXVALUE',           // '#fff', '#ffff', '#ffffff', '#ffffffff'
-    NUMBER: 'NUMBER',               // '127', '120', '80'
-    PERCENT: 'PERCENT',             // '80%'
-    UNITS: 'UNITS',                 // 'deg', 'rad', 'grad', 'turn'
-    COMMA: 'COMMA',                 // ',' (for older syntax)
-    SLASH: 'SLASH',                 // '/' (for modern syntax)
-    LPAREN: 'LPAREN',               // '('
-    RPAREN: 'RPAREN',               // ')'
-    DELIMITER: 'DELIMITER',         // Any delimiter not already captured
-    WHITESPACE: 'WHITESPACE',       // ' '
-    CHAR: 'CHAR',                   // Any single character not already captured
-    EOF: 'EOF'                      // End of line/string
+export const Keywords = {
+    'display-p3': 'display-p3',
+    none: 'none',
+    initial: 'initial',
+    unset: 'unset'
 } as const;
 
-export const TokenSpec: TokenSpec = [
-    // Whitespace (to be ignored)
-    [TokenType.WHITESPACE, /^\s+/],
+export enum TokenType {
+    FUNCTION = 'FUNCTION',           // 'rgba', 'rgb', 'hsl', etc.
+    KEYWORD = 'KEYWORD',             // For specific keywords like 'display-p3'
+    NAMEDCOLOR = 'NAMEDCOLOR',       // For CSS named colors like 'red', 'transparent'
+    IDENTIFIER = 'IDENTIFIER',       // Any word/letter not already captured 
+    ////HASH = 'HASH',                 // '#'...Removed as HEXVALUE captures it
+    HEXVALUE = 'HEXVALUE',           // '#fff', '#ffff', '#ffffff', '#ffffffff'
+    NUMBER = 'NUMBER',               // '127', '120', '80'
+    PERCENT = 'PERCENT',             // '80%'
+    UNITS = 'UNITS',                 // 'deg', 'rad', 'grad', 'turn'
+    COMMA = 'COMMA',                 // ',' (for older syntax)
+    SLASH = 'SLASH',                 // '/' (for modern syntax)
+    LPAREN = 'LPAREN',               // '('
+    RPAREN = 'RPAREN',               // ')'
+    DELIMITER = 'DELIMITER',         // Any delimiter/general punctuation not already captured
+    WHITESPACE = 'WHITESPACE',       // ' '
+    CHAR = 'CHAR',                   // Fallback for any unexpected character
+    EOF = 'EOF'                      // End of line/string
+}
 
-    // Specific function names
-    [TokenType.FUNCTION, /^(rgba?|hsla?|hwba?|hsva?|lab|lch|oklab|oklch|cmyk|color)\b/i],
+// Helper function to create the dynamic TokenSpec
+const createTokenSpec = (): TokenSpec => {
+    // Generate a dynamic regex for all named colors.
+    // This is far more efficient than looping through an object later.
+    const colorNames = Object.keys(Colors);
+    const namedColorRegex = new RegExp(`^(${colorNames.join('|')})\\b`, 'i');
 
-    // Punctuation
-    [TokenType.LPAREN, /^\(/],
-    [TokenType.RPAREN, /^\)/],
-    [TokenType.COMMA, /^,/],
-    [TokenType.SLASH, /^\//],
+    const keywords = Object.keys(Keywords);
+    const keywordRegex = new RegExp(`^(${keywords.join('|')})\\b`, 'i');
 
-    // Hash symbol for hex colors
-    [TokenType.HASH, /^#/],
+    return [
+        // Whitespace (to be ignored)
+        [TokenType.WHITESPACE, /^\s+/],
 
-    // Units must come before IDENTIFIER
-    [TokenType.UNITS, /^(deg|grad|rad|turn)\b/i],
+        // Named colors (must come before IDENTIFIER)
+        [TokenType.NAMEDCOLOR, namedColorRegex],
 
-    // Percentage must come before NUMBER
-    [TokenType.PERCENT, /^-?\d*\.?\d+%/],
+        // Keywords (must come before IDENTIFIER)
+        [TokenType.KEYWORD, keywordRegex],
 
-    // Number must come before IDENTIFIER
-    [TokenType.NUMBER, /^-?\d*\.?\d+/],
+        // Specific function names
+        [TokenType.FUNCTION, /^(rgba?|hsla?|hwba?|hsva?|lab|lch|oklab|oklch|cmyk|color)\b/i],
 
-    // Hex values (3, 4, 6, or 8 chars). Must come before IDENTIFIER.
-    // The \b ensures it doesn't match the start of a longer word.
-    [TokenType.HEXVALUE, /^([a-f\d]{8}|[a-f\d]{6}|[a-f\d]{4}|[a-f\d]{3})\b/i],
+        // Punctuation
+        [TokenType.LPAREN, /^\(/],
+        [TokenType.RPAREN, /^\)/],
+        [TokenType.COMMA, /^,/],
+        [TokenType.SLASH, /^\//],
 
-    // Generic identifiers for color spaces like 'display-p3'
-    [TokenType.IDENTIFIER, /^[a-z][a-z\d-]*/i],
-] as const;
+        // Units (must come before IDENTIFIER)
+        [TokenType.UNITS, /^(deg|grad|rad|turn)\b/i],
+
+        // Percentage (must come before NUMBER)
+        [TokenType.PERCENT, /^-?\d*\.?\d+%/],
+
+        // Number (must come before IDENTIFIER)
+        [TokenType.NUMBER, /^-?\d*\.?\d+(e[+-]?\d+)?/i],
+
+        // Hex value (must come before IDENTIFIER)
+        [TokenType.HEXVALUE, /^#([a-f\d]{8}|[a-f\d]{6}|[a-f\d]{4}|[a-f\d]{3})\b/i],
+
+        // Generic identifiers for color spaces like 'display-p3' or CSS variables
+        [TokenType.IDENTIFIER, /^[-\w][a-z_][a-z\d_-]*/i],
+
+        // Fallback to catch any character not matched. This indicates an error.
+        [TokenType.DELIMITER, /[^\w\s]/i],
+
+        // Fallback to catch any character not matched. This indicates an error.
+        [TokenType.CHAR, /^./],
+    ] as const;
+};
+
+// Create the specification once
+export const TokenSpec: TokenSpec = createTokenSpec();
 
 export default class Tokenizer {
     private readonly source: string = '';
     tokens: Token[] = [];
-    private tokenIndex: number = 0;
+    private tokenIndex: number = 0; // Current position in the `tokens` array
+    private cursor: number = 0; // Current position in the `source` string
 
     constructor(string: string) {
         Print.add('1. Tokenizer - Constructor()');
 
         if (typeof string !== 'string') {
-            throw new Error('Tokenizer validateSource(): Class expects a string...');
+            throw new Error('Tokenizer constructor: Class expects a string input.');
         }
-        this.source = string;
 
+        // Remove unnecessary whitespace and convert to lowercase for case-insensitivity
+        this.source = string.replace(/(\s+|\r\n|\n|\r)/gm, " ").trim().toLowerCase();
         Print.add('1.A. Constructor Args:', this.source);
 
         this.tokens = this._tokenize();
         Print();
     }
 
+    private isEOF() {
+        return this.cursor >= this.source.length;
+    }
+
     /**
      * Returns the current token without consuming it.
      */
     public current(): Token {
+        if (this.tokenIndex >= this.tokens.length) {
+            return { type: TokenType.EOF } as Token;
+        }
         return this.tokens[this.tokenIndex];
     }
 
@@ -97,7 +139,6 @@ export default class Tokenizer {
     public lookahead(offset: number = 1): Token {
         const index = this.tokenIndex + offset;
         if (index >= this.tokens.length) {
-            // Return the EOF token if looking past the end.
             return this.tokens[this.tokens.length - 1];
         }
         return this.tokens[index];
@@ -116,47 +157,65 @@ export default class Tokenizer {
         return this.tokens[index];
     }
 
-    // This internal method contains the tokenization logic
     private _tokenize(): Token[] {
         Print.add('2. Tokenizer - tokenize()');
-
         const tokens: Token[] = [];
-        let cursor = 0;
+        this.cursor = 0;
 
-        while (cursor < this.source.length) {
-            const remaining = this.source.substring(cursor);
-            let matched: boolean = false;
+        while (!this.isEOF()) {
+            let matched = false;
+
+            // Get the remaining string from the current cursor position
+            const remaining = this.source.substring(this.cursor);
 
             for (const [tokenType, regexp] of TokenSpec) {
-                const match = remaining.match(regexp);
+                const match = regexp.exec(remaining);
 
                 if (match) {
-                    // Identifiers are invalid tokens, throw
-                    if (tokenType === TokenType.IDENTIFIER) {
-                        const errorMsg = `Tokenizer._tokenize(): Unexpected character: ${this.source[cursor]}, at position: ${cursor}.`;
+                    const value = match[0];
+
+                    // Critical: If CHAR is matched, it's an unrecognized token.
+                    if (tokenType === TokenType.CHAR) {
+                        const errorMsg = `Tokenizer: Unexpected character: ${value}, at position: ${this.cursor}.`;
                         throw new SyntaxError(errorMsg);
                     }
+
                     // Skip whitespace tokens in the final list for the parser
                     if (tokenType !== TokenType.WHITESPACE) {
-                        tokens.push({ type: tokenType, value: match[0] });
+                        // These token types do not require a value property
+                        if (tokenType === TokenType.LPAREN
+                            || tokenType === TokenType.RPAREN
+                            || tokenType === TokenType.COMMA
+                            || tokenType === TokenType.SLASH
+                        ) {
+                            // Create tokens for TokenNodes
+                            tokens.push({ type: tokenType });
+                        } else {
+                            // Create tokens for everything else (TokenValueNodes)
+                            tokens.push({ type: tokenType, value: match[0] });
+                        }
                     }
-                    cursor += match[0].length;
+                    // Advance cursor by the length of the matched value
+                    this.cursor += match[0].length;
                     matched = true;
-                    break;
+                    break; // Move to the next part of the source string
                 }
             }
-
             if (!matched) {
-                const errorMsg = `Tokenizer._tokenize(): Unexpected character: ${this.source[cursor]}, at position: ${cursor}.`;
+                // This case should ideally be caught by TokenType.CHAR.
+                // If it's reached, it indicates a regex issue or an unhandled edge case
+                // where CHAR didn't match.
+                const errorMsg = `Tokenizer: Infinite loop or unmatched character at position: ${this.cursor}.`;
                 throw new SyntaxError(errorMsg);
             }
         }
 
-        tokens.push({ type: TokenType.EOF, value: 'EOF' });
+        tokens.push({ type: TokenType.EOF });
 
         for (const token of tokens) {
             Print.add('2.B. Tokenizer - tokens:', token);
         }
         return tokens;
     }
+
 } // End of class Tokenizer

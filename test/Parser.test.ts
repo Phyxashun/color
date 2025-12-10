@@ -1,3 +1,6 @@
+
+// src/test/Parser.test.ts
+
 import { describe, it, expect, vi } from 'vitest';
 import Parser, { NodeType } from '../src/Parser.ts';
 

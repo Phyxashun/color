@@ -1,5 +1,7 @@
+// src/test/Print.test.ts
+
 import { describe, it, beforeEach, expect, vi } from "vitest";
-import Print from "../src/Print";
+import { Print } from "../src/Print";
 
 describe("Print Utility (new version)", () => {
 
@@ -70,7 +72,6 @@ describe("Print Utility (new version)", () => {
         });
 
         it("should throw if called with no parameters", () => {
-            // @ts-expect-error
             expect(() => Print.add()).toThrow(SyntaxError);
         });
 
@@ -101,7 +102,6 @@ describe("Print Utility (new version)", () => {
         });
 
         it("should throw when message is undefined AND value is undefined", () => {
-            // @ts-expect-error
             expect(() => Print.add(undefined, undefined)).toThrow(SyntaxError);
         });
     });

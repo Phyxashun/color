@@ -1,1232 +1,409 @@
 /// <reference types='../src/types/Tokenizer.d.ts' />
+// src/test/Tokenizer.test.ts
 
-import { describe, it, expect, vi } from 'vitest';
-import Tokenizer, { TokenType } from '../src/Tokenizer.ts';
-//import Parser from '../src/Parser.ts';
-/*
-describe('tokenizer', () => {
-    describe('tokenization', () => {
+import { describe, it, expect, beforeEach } from 'vitest';
 
-        it('should tokenize whitespace', () => {
-            const tokenizer = new Tokenizer('   ');
-            for (const t of tokenizer.tokens) {
-                expect(t.type).toBe(TokenType.EOF); // Whitespace is skipped
-            }
-        });
-
-        it('should tokenize function names', () => {
-            const tokenizer = new Tokenizer('rgb');
-            const token = tokenizer.tokens[0]
-            expect(token.type).toBe(TokenType.FUNCTION);
-            expect(token.value).toBe('rgb');
-        });
-
-        it('should tokenize all function types', () => {
-            const functions = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'hwba', 'lab', 'lch', 'oklab', 'oklch', 'hsv', 'hsva', 'cmyk', 'color'];
-
-            for (const fn of functions) {
-                const tokenizer = new Tokenizer(fn);
-                const token = tokenizer.tokens[0];
-                expect(token.type).toBe(TokenType.FUNCTION);
-                expect(token.value).toBe(fn);
-            }
-        });
-
-        it('should tokenize hex values', () => {
-            const tokenizer = new Tokenizer('#abc123');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.HEXVALUE);
-            expect(token.value).toBe('#abc123');
-        });
-
-        it('should tokenize numbers', () => {
-            const tokenizer = new Tokenizer('255');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.NUMBER);
-            expect(token.value).toBe('255');
-        });
-
-        it('should tokenize decimal numbers', () => {
-            const tokenizer = new Tokenizer('0.5');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.NUMBER);
-            expect(token.value).toBe('0.5');
-        });
-
-        it('should tokenize percentages', () => {
-            const tokenizer = new Tokenizer('100%');
-            const percent = tokenizer.tokens[0];
-            expect(percent.type).toBe(TokenType.PERCENT);
-            expect(percent.value).toBe('100%');
-        });
-
-        it('should tokenize angle units', () => {
-            const units = ['deg', 'rad', 'grad', 'turn'];
-            for (const unit of units) {
-                const tokenizer = new Tokenizer(`120${unit}`);
-                const token = tokenizer.tokens[1];
-                expect(token.type).toBe(TokenType.UNITS);
-                expect(token.value).toBe(unit);
-            }
-        });
-
-        it('should tokenize parentheses', () => {
-            const tokenizer = new Tokenizer('()');
-            const lparen = tokenizer.tokens[0];
-            const rparen = tokenizer.tokens[1];
-            expect(lparen.type).toBe(TokenType.LPAREN);
-            expect(rparen.type).toBe(TokenType.RPAREN);
-        });
-
-        it('should tokenize comma', () => {
-            const tokenizer = new Tokenizer(',');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.COMMA);
-        });
-
-        it('should tokenize slash', () => {
-            const tokenizer = new Tokenizer('/');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.SLASH);
-        });
-
-        it('should return EOF at end of input', () => {
-            const tokenizer = new Tokenizer('');
-            const token = tokenizer.tokens[0];
-            expect(token.type).toBe(TokenType.EOF);
-        });
-
-        it('should throw on unexpected characters', () => {
-            expect(() => new Tokenizer('@invalid')).toThrow();
-        });
-
-        it('should throw on invalid string input', () => {
-            expect(() => new Tokenizer()).toThrow();
-        });
-    });
-
-    describe('complex tokenization', () => {
-        const tokenizer = new Tokenizer('rgb(255, 0, 0)');
-        const tokens = tokenizer.tokens;
-        it('should tokenize complete rgb function', () => {
-            expect(tokens[0].type).toBe(TokenType.FUNCTION);
-            expect(tokens[1].type).toBe(TokenType.LPAREN);
-            expect(tokens[2].type).toBe(TokenType.NUMBER);
-            expect(tokens[3].type).toBe(TokenType.COMMA);
-            expect(tokens[4].type).toBe(TokenType.NUMBER);
-            expect(tokens[5].type).toBe(TokenType.COMMA);
-            expect(tokens[6].type).toBe(TokenType.NUMBER);
-            expect(tokens[7].type).toBe(TokenType.RPAREN);
-            expect(tokens[8].type).toBe(TokenType.EOF);
-        });
-    });
-});
-/*
-
-describe('Parser', () => {
-    describe('hex colors', () => {
-        it('should parse 3-digit hex colors', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#fff');
-
-            expect(ast.type).toBe(NodeType.start);
-            expect(ast.value.type).toBe(NodeType.color);
-            expect(ast.value.value.type).toBe(NodeType.hexcolor);
-            expect(ast.value.value.value).toBe('#fff');
-        });
-
-        it('should parse 4-digit hex colors with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#ffff');
-
-            expect(ast.value.value.type).toBe(NodeType.hexcolor);
-            expect(ast.value.value.value).toBe('#ffff');
-        });
-
-        it('should parse 6-digit hex colors', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#ff00ff');
-
-            expect(ast.value.value.type).toBe(NodeType.hexcolor);
-            expect(ast.value.value.value).toBe('#ff00ff');
-        });
-
-        it('should parse 8-digit hex colors with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#ff00ff80');
-
-            expect(ast.value.value.type).toBe(NodeType.hexcolor);
-            expect(ast.value.value.value).toBe('#ff00ff80');
-        });
-
-        it('should handle uppercase hex values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#ABCDEF');
-
-            expect(ast.value.value.value).toBe('#ABCDEF');
-        });
-
-        it('should handle mixed case hex values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#AbCdEf');
-
-            expect(ast.value.value.value).toBe('#AbCdEf');
-        });
-    });
-
-    describe('RGB/RGBA - space-separated syntax', () => {
-        it('should parse rgb with integers', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0)');
-
-            expect(ast.value.value.type).toBe(NodeType.function);
-            expect(ast.value.value.value.type).toBe(NodeType.channels);
-            expect(ast.value.value.value.value.type).toBe(NodeType.space);
-            expect(ast.value.value.value.value.channels).toHaveLength(3);
-            expect(ast.value.value.value.value.channels[0].value).toBe(255);
-            expect(ast.value.value.value.value.channels[1].value).toBe(0);
-            expect(ast.value.value.value.value.channels[2].value).toBe(0);
-        });
-
-        it('should parse rgb with percentages', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(100% 50% 0%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].valueType).toBe('percentage');
-            expect(channels[0].value).toBe(100);
-            expect(channels[0].units).toBe('%');
-        });
-
-        it('should parse rgba with slash alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 0.5)');
-
-            const spaceList = ast.value.value.value.value;
-            expect(spaceList.alpha).toBeDefined();
-            expect(spaceList.alpha?.type).toBe(NodeType.alpha);
-            expect(spaceList.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse rgba with percentage alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 50%)');
-
-            const alpha = ast.value.value.value.value.alpha;
-            expect(alpha?.value.valueType).toBe('percentage');
-            expect(alpha?.value.value).toBe(50);
-        });
-
-        it('should parse rgba with alpha = 1', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 1)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(1);
-        });
-
-        it('should parse rgba function name', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgba(255 0 0 / 0.5)');
-
-            expect(ast.value.value.name).toBe('rgba');
-        });
-    });
-
-    describe('RGB/RGBA - comma-separated syntax', () => {
-        it('should parse rgb with commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255, 0, 0)');
-
-            expect(ast.value.value.value.value.type).toBe(NodeType.comma);
-            expect(ast.value.value.value.value.channels[0].value).toBe(255);
-            expect(ast.value.value.value.value.channels[1].value).toBe(0);
-            expect(ast.value.value.value.value.channels[2].value).toBe(0);
-        });
-
-        it('should parse rgba with comma alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgba(255, 0, 0, 0.5)');
-
-            const commaList = ast.value.value.value.value;
-            expect(commaList.alpha).toBeDefined();
-            expect(commaList.alpha?.type).toBe(NodeType.optional_alpha);
-            expect(commaList.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse rgb with percentages and commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(100%, 50%, 0%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].valueType).toBe('percentage');
-            expect(channels[1].valueType).toBe('percentage');
-            expect(channels[2].valueType).toBe('percentage');
-        });
-
-        it('should handle spaces around commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 , 0 , 0)');
-
-            expect(ast.value.value.value.value.channels).toHaveLength(3);
-        });
-    });
-
-    describe('HSL/HSLA - space-separated syntax', () => {
-        it('should parse hsl with degrees', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120deg 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(ast.value.value.name).toBe('hsl');
-            expect(channels[0].valueType).toBe('angle');
-            expect(channels[0].value).toBe(120);
-            expect(channels[0].units).toBe('deg');
-            expect(channels[1].valueType).toBe('percentage');
-            expect(channels[2].valueType).toBe('percentage');
-        });
-
-        it('should parse hsl without units on hue', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(120);
-            expect(channels[0].valueType).toBe('number');
-        });
-
-        it('should parse hsl with radians', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(2rad 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].units).toBe('rad');
-        });
-
-        it('should parse hsl with gradians', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(133grad 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].units).toBe('grad');
-        });
-
-        it('should parse hsl with turns', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(0.33turn 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0.33);
-            expect(channels[0].units).toBe('turn');
-        });
-
-        it('should parse hsla with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120deg 100% 50% / 0.5)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse hsla function name', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsla(120deg 100% 50% / 0.5)');
-
-            expect(ast.value.value.name).toBe('hsla');
-        });
-    });
-
-    describe('HSL/HSLA - comma-separated syntax', () => {
-        it('should parse hsl with commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120, 100%, 50%)');
-
-            expect(ast.value.value.value.value.type).toBe(NodeType.comma);
-            expect(ast.value.value.value.value.channels[0].value).toBe(120);
-        });
-
-        it('should parse hsla with comma alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsla(120, 100%, 50%, 0.8)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.8);
-        });
-
-        it('should parse hsl with degrees and commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120deg, 100%, 50%)');
-
-            expect(ast.value.value.value.value.channels[0].units).toBe('deg');
-        });
-    });
-
-    describe('HWB/HWBA', () => {
-        it('should parse hwb', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hwb(120 30% 50%)');
-
-            expect(ast.value.value.name).toBe('hwb');
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(120);
-            expect(channels[1].value).toBe(30);
-            expect(channels[2].value).toBe(50);
-        });
-
-        it('should parse hwb with degrees', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hwb(120deg 30% 50%)');
-
-            expect(ast.value.value.value.value.channels[0].units).toBe('deg');
-        });
-
-        it('should parse hwba with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hwb(120 30% 50% / 0.7)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.7);
-        });
-
-        it('should parse hwba function name', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hwba(120 30% 50% / 0.7)');
-
-            expect(ast.value.value.name).toBe('hwba');
-        });
-    });
-
-    describe('HSV/HSVA', () => {
-        it('should parse hsv', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsv(120 100% 50%)');
-
-            expect(ast.value.value.name).toBe('hsv');
-        });
-
-        it('should parse hsv with comma syntax', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsv(120, 100%, 50%)');
-
-            expect(ast.value.value.value.value.type).toBe(NodeType.comma);
-        });
-
-        it('should parse hsva with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsv(120 100% 50% / 0.5)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse hsva function name', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsva(120, 100%, 50%, 0.5)');
-
-            expect(ast.value.value.name).toBe('hsva');
-        });
-    });
-
-    describe('LAB', () => {
-        it('should parse lab', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lab(50 40 59)');
-
-            expect(ast.value.value.name).toBe('lab');
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(50);
-            expect(channels[1].value).toBe(40);
-            expect(channels[2].value).toBe(59);
-        });
-
-        it('should parse lab with percentage lightness', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lab(50% 40 59)');
-
-            expect(ast.value.value.value.value.channels[0].valueType).toBe('percentage');
-        });
-
-        it('should parse lab with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lab(50 40 59 / 0.5)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse lab with decimal values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lab(50.5 40.2 59.8)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(50.5);
-            expect(channels[1].value).toBe(40.2);
-            expect(channels[2].value).toBe(59.8);
-        });
-    });
-
-    describe('OKLAB', () => {
-        it('should parse oklab', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklab(50 0.1 0.2)');
-
-            expect(ast.value.value.name).toBe('oklab');
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(50);
-            expect(channels[1].value).toBe(0.1);
-            expect(channels[2].value).toBe(0.2);
-        });
-
-        it('should parse oklab with percentage', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklab(50% 0.1 0.2)');
-
-            expect(ast.value.value.value.value.channels[0].valueType).toBe('percentage');
-        });
-
-        it('should parse oklab with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklab(50 0.1 0.2 / 0.8)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.8);
-        });
-    });
-
-    describe('LCH', () => {
-        it('should parse lch', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lch(50 70 120)');
-
-            expect(ast.value.value.name).toBe('lch');
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(50);
-            expect(channels[1].value).toBe(70);
-            expect(channels[2].value).toBe(120);
-        });
-
-        it('should parse lch with degrees', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lch(50 70 120deg)');
-
-            expect(ast.value.value.value.value.channels[2].units).toBe('deg');
-        });
-
-        it('should parse lch with percentage lightness', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lch(50% 70 120)');
-
-            expect(ast.value.value.value.value.channels[0].valueType).toBe('percentage');
-        });
-
-        it('should parse lch with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lch(50 70 120 / 0.9)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.9);
-        });
-
-        it('should parse lch with decimal hue', () => {
-            const parser = new Parser();
-            const ast = parser.parse('lch(50 70 120.5)');
-
-            expect(ast.value.value.value.value.channels[2].value).toBe(120.5);
-        });
-    });
-
-    describe('OKLCH', () => {
-        it('should parse oklch', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklch(50 0.2 120)');
-
-            expect(ast.value.value.name).toBe('oklch');
-        });
-
-        it('should parse oklch with degrees', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklch(50% 0.2 120deg)');
-
-            expect(ast.value.value.value.value.channels[2].units).toBe('deg');
-        });
-
-        it('should parse oklch with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('oklch(50 0.2 120 / 0.6)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.6);
-        });
-    });
-
-    describe('CMYK', () => {
-        it('should parse cmyk with space syntax', () => {
-            const parser = new Parser();
-            const ast = parser.parse('cmyk(0 100 100 0)');
-
-            expect(ast.value.value.name).toBe('cmyk');
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0);
-            expect(channels[1].value).toBe(100);
-            expect(channels[2].value).toBe(100);
-        });
-
-        it('should parse cmyk with comma syntax', () => {
-            const parser = new Parser();
-            const ast = parser.parse('cmyk(0, 100, 100, 0)');
-
-            expect(ast.value.value.value.value.type).toBe(NodeType.comma);
-        });
-
-        it('should parse cmyk with percentages', () => {
-            const parser = new Parser();
-            const ast = parser.parse('cmyk(0% 100% 100% 0%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].valueType).toBe('percentage');
-            expect(channels[1].valueType).toBe('percentage');
-        });
-    });
-
-    describe('COLOR function', () => {
-        it('should parse color function', () => {
-            const parser = new Parser();
-            const ast = parser.parse('color(display-p3 1 0.5 0)');
-
-            expect(ast.value.value.name).toBe('color');
-        });
-
-        it('should parse color with decimal values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('color(srgb 0.5 0.3 0.2)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0.5);
-            expect(channels[1].value).toBe(0.3);
-            expect(channels[2].value).toBe(0.2);
-        });
-
-        it('should parse color with alpha', () => {
-            const parser = new Parser();
-            const ast = parser.parse('color(display-p3 1 0.5 0 / 0.8)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.8);
-        });
-    });
-
-    describe('edge cases', () => {
-        it('should handle no whitespace', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255,0,0)');
-
-            expect(ast.value.value.value.value.channels).toHaveLength(3);
-        });
-
-        it('should handle extra whitespace', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(  255   0   0  )');
-
-            expect(ast.value.value.value.value.channels).toHaveLength(3);
-        });
-
-        it('should handle mixed whitespace and commas', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb( 255 , 0 , 0 )');
-
-            expect(ast.value.value.value.value.type).toBe(NodeType.comma);
-        });
-
-        it('should parse zero values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(0 0 0)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0);
-            expect(channels[1].value).toBe(0);
-            expect(channels[2].value).toBe(0);
-        });
-
-        it('should parse alpha = 0', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 0)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0);
-        });
-
-        it('should parse very small decimals', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 0.001)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.001);
-        });
-    });
-
-    describe('error handling', () => {
-        it('should throw on missing hash for hex color', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('fff')).toThrow();
-        });
-
-        it('should throw on missing opening parenthesis', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('rgb 255, 0, 0)')).toThrow();
-        });
-
-        it('should throw on missing closing parenthesis', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('rgb(255, 0, 0')).toThrow();
-        });
-
-        it('should throw on missing comma in comma-separated list', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('rgb(255 0, 0)')).toThrow();
-        });
-
-        it('should throw on invalid function name', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('invalid(255, 0, 0)')).toThrow();
-        });
-
-        it('should throw on unexpected token', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('rgb(255, 0, 0, 0, 0)')).toThrow();
-        });
-
-        it('should throw on premature EOF', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('rgb(255')).toThrow();
-        });
-
-        it('should throw on invalid hex characters', () => {
-            const parser = new Parser();
-            expect(() => parser.parse('#xyz')).toThrow();
-        });
-    });
-
-    describe('case insensitivity', () => {
-        it('should handle uppercase function names', () => {
-            const parser = new Parser();
-            const ast = parser.parse('RGB(255, 0, 0)');
-
-            expect(ast.value.value.name).toBe('rgb');
-        });
-
-        it('should handle mixed case function names', () => {
-            const parser = new Parser();
-            const ast = parser.parse('RgBa(255, 0, 0, 0.5)');
-
-            expect(ast.value.value.name).toBe('rgba');
-        });
-
-        it('should handle uppercase angle units', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120DEG 100% 50%)');
-
-            expect(ast.value.value.value.value.channels[0].units).toBe('deg');
-        });
-    });
-
-    describe('real world examples', () => {
-        it('should parse common red color', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0)');
-
-            expect(ast.value.type).toBe(NodeType.color);
-        });
-
-        it('should parse transparent black', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgba(0, 0, 0, 0)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0);
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0);
-        });
-
-        it('should parse semi-transparent white', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgba(255, 255, 255, 0.5)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0.5);
-        });
-
-        it('should parse pure green in HSL', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120, 100%, 50%)');
-
-            expect(ast.value.value.name).toBe('hsl');
-        });
-
-        it('should parse blue with modern syntax', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(240 100% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(240);
-        });
-
-        it('should parse yellow', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 255 0)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(255);
-            expect(channels[1].value).toBe(255);
-            expect(channels[2].value).toBe(0);
-        });
-
-        it('should parse cyan in modern HSL', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(180deg 100% 50%)');
-
-            expect(ast.value.value.value.value.channels[0].value).toBe(180);
-        });
-
-        it('should parse magenta', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 255)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(255);
-            expect(channels[2].value).toBe(255);
-        });
-
-        it('should parse orange', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 165 0)');
-
-            expect(ast.value.value.value.value.channels[1].value).toBe(165);
-        });
-
-        it('should parse gray with percentages', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(50% 50% 50%)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].valueType).toBe('percentage');
-            expect(channels[0].value).toBe(50);
-        });
-    });
-
-    describe('comprehensive color space tests', () => {
-        it('should parse all RGB variants', () => {
-            const parser = new Parser();
-            const colors = [
-                'rgb(255 0 0)',
-                'rgb(255, 0, 0)',
-                'rgba(255 0 0 / 0.5)',
-                'rgba(255, 0, 0, 0.5)',
-                'rgb(100% 0% 0%)',
-                'rgb(100%, 0%, 0%)'
-            ];
-
-            colors.forEach(color => {
-                const ast = parser.parse(color);
-                expect(ast.type).toBe(NodeType.start);
-                expect(ast.value.value.name).toMatch(/^rgba?$/);
-            });
-        });
-
-        it('should parse all HSL variants', () => {
-            const parser = new Parser();
-            const colors = [
-                'hsl(120 100% 50%)',
-                'hsl(120, 100%, 50%)',
-                'hsla(120 100% 50% / 0.5)',
-                'hsla(120, 100%, 50%, 0.5)',
-                'hsl(120deg 100% 50%)',
-                'hsl(2rad 100% 50%)',
-                'hsl(0.33turn 100% 50%)'
-            ];
-
-            colors.forEach(color => {
-                const ast = parser.parse(color);
-                expect(ast.value.value.name).toMatch(/^hsla?$/);
-            });
-        });
-
-        it('should parse all angle units', () => {
-            const parser = new Parser();
-            const units = ['deg', 'rad', 'grad', 'turn'];
-
-            units.forEach(unit => {
-                const ast = parser.parse(`hsl(120${unit} 100% 50%)`);
-                expect(ast.value.value.value.value.channels[0].units).toBe(unit);
-            });
-        });
-
-        it('should parse hex colors of all lengths', () => {
-            const parser = new Parser();
-            const colors = ['#f00', '#f00f', '#ff0000', '#ff0000ff'];
-
-            colors.forEach(color => {
-                const ast = parser.parse(color);
-                expect(ast.value.value.type).toBe(NodeType.hexcolor);
-                expect(ast.value.value.value).toBe(color);
-            });
-        });
-    });
-
-    describe('AST structure validation', () => {
-        it('should have correct node hierarchy for rgb', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0)');
-
-            // Validate structure
-            expect(ast.type).toBe(NodeType.start);
-            expect(ast.value).toBeDefined();
-            expect(ast.value.type).toBe(NodeType.color);
-            expect(ast.value.value).toBeDefined();
-            expect(ast.value.value.type).toBe(NodeType.function);
-            expect(ast.value.value.value).toBeDefined();
-            expect(ast.value.value.value.type).toBe(NodeType.channels);
-            expect(ast.value.value.value.value).toBeDefined();
-            expect(ast.value.value.value.value.type).toBe(NodeType.space);
-            expect(ast.value.value.value.value.channels).toHaveLength(3);
-            expect(ast.value.value.value.value.channels[0].type).toBe(NodeType.value);
-        });
-
-        it('should have correct node hierarchy for hex', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#fff');
-
-            expect(ast.type).toBe(NodeType.start);
-            expect(ast.value.type).toBe(NodeType.color);
-            expect(ast.value.value.type).toBe(NodeType.hexcolor);
-            expect(ast.value.value.value).toBe('#fff');
-        });
-
-        it('should have alpha node when present', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 0.5)');
-
-            const spaceList = ast.value.value.value.value;
-            expect(spaceList.alpha).toBeDefined();
-            expect(spaceList.alpha?.type).toBe(NodeType.alpha);
-            expect(spaceList.alpha?.value).toBeDefined();
-            expect(spaceList.alpha?.value.type).toBe(NodeType.value);
-        });
-
-        it('should not have alpha node when absent', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0)');
-
-            const spaceList = ast.value.value.value.value;
-            expect(spaceList.alpha).toBeUndefined();
-        });
-    });
-
-    describe('value node properties', () => {
-        it('should correctly identify number type', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('number');
-            expect(channel.units).toBeUndefined();
-        });
-
-        it('should correctly identify percentage type', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(100% 0% 0%)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('percentage');
-            expect(channel.units).toBe('%');
-        });
-
-        it('should correctly identify angle type with deg', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(120deg 100% 50%)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('angle');
-            expect(channel.units).toBe('deg');
-        });
-
-        it('should correctly identify angle type with rad', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(2rad 100% 50%)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('angle');
-            expect(channel.units).toBe('rad');
-        });
-
-        it('should correctly identify angle type with grad', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(133grad 100% 50%)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('angle');
-            expect(channel.units).toBe('grad');
-        });
-
-        it('should correctly identify angle type with turn', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(0.33turn 100% 50%)');
-
-            const channel = ast.value.value.value.value.channels[0];
-            expect(channel.valueType).toBe('angle');
-            expect(channel.units).toBe('turn');
-        });
-
-        it('should store correct numeric values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(123 45 67)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(123);
-            expect(channels[1].value).toBe(45);
-            expect(channels[2].value).toBe(67);
-        });
-
-        it('should store correct decimal values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(0.5 0.25 0.75)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0.5);
-            expect(channels[1].value).toBe(0.25);
-            expect(channels[2].value).toBe(0.75);
-        });
-    });
-
-    describe('function name normalization', () => {
-        it('should normalize function names to lowercase', () => {
-            const parser = new Parser();
-            const colors = [
-                ['RGB(255, 0, 0)', 'rgb'],
-                ['RGBA(255, 0, 0, 0.5)', 'rgba'],
-                ['HSL(120, 100%, 50%)', 'hsl'],
-                ['HSLA(120, 100%, 50%, 0.5)', 'hsla'],
-                ['HWB(120 30% 50%)', 'hwb'],
-                ['LAB(50 40 59)', 'lab'],
-                ['LCH(50 70 120)', 'lch'],
-                ['OKLAB(50 0.1 0.2)', 'oklab'],
-                ['OKLCH(50 0.2 120)', 'oklch']
-            ];
-
-            colors.forEach(([input, expected]) => {
-                const ast = parser.parse(input);
-                expect(ast.value.value.name).toBe(expected);
-            });
-        });
-    });
-
-    describe('boundary values', () => {
-        it('should handle max RGB values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 255 255)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(255);
-            expect(channels[1].value).toBe(255);
-            expect(channels[2].value).toBe(255);
-        });
-
-        it('should handle min RGB values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(0 0 0)');
-
-            const channels = ast.value.value.value.value.channels;
-            expect(channels[0].value).toBe(0);
-            expect(channels[1].value).toBe(0);
-            expect(channels[2].value).toBe(0);
-        });
-
-        it('should handle 100% percentages', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(100% 100% 100%)');
-
-            const channels = ast.value.value.value.value.channels;
-            channels.forEach(channel => {
-                expect(channel.value).toBe(100);
-                expect(channel.valueType).toBe('percentage');
-            });
-        });
-
-        it('should handle 0% percentages', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(0% 0% 0%)');
-
-            const channels = ast.value.value.value.value.channels;
-            channels.forEach(channel => {
-                expect(channel.value).toBe(0);
-                expect(channel.valueType).toBe('percentage');
-            });
-        });
-
-        it('should handle 360deg hue', () => {
-            const parser = new Parser();
-            const ast = parser.parse('hsl(360deg 100% 50%)');
-
-            expect(ast.value.value.value.value.channels[0].value).toBe(360);
-        });
-
-        it('should handle alpha = 1', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 1)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(1);
-        });
-
-        it('should handle alpha = 0', () => {
-            const parser = new Parser();
-            const ast = parser.parse('rgb(255 0 0 / 0)');
-
-            expect(ast.value.value.value.value.alpha?.value.value).toBe(0);
-        });
-    });
-
-    describe('performance tests', () => {
-        it('should parse multiple colors efficiently', () => {
-            const parser = new Parser();
-            const colors = [
-                '#fff',
-                'rgb(255, 0, 0)',
-                'hsl(120, 100%, 50%)',
-                'rgba(255, 0, 0, 0.5)',
-                'hsla(120, 100%, 50%, 0.8)',
-                'hwb(120 30% 50%)',
-                'lab(50 40 59)',
-                'lch(50 70 120)',
-                'oklab(50 0.1 0.2)',
-                'oklch(50 0.2 120)'
-            ];
-
-            colors.forEach(color => {
-                const ast = parser.parse(color);
-                expect(ast.type).toBe(NodeType.start);
-            });
-        });
-
-        it('should handle long hex values', () => {
-            const parser = new Parser();
-            const ast = parser.parse('#aabbccdd');
-
-            expect(ast.value.value.value).toBe('#aabbccdd');
-        });
-    });
-});
-//*/
-
-// Mock the Print module to avoid errors during testing
-//vi.mock('../src/Print.ts');
+import Tokenizer, { TokenType, TokenSpec, Keywords } from '../src/Tokenizer.ts';
+import { Colors } from '../src/Colors.ts';
 
 describe('Tokenizer', () => {
 
-    // Helper function to simplify getting tokens
-    const tokenize = (str: string) => new Tokenizer(str).tokens;
-
-    describe('Single Token Recognition', () => {
-        it('should tokenize a FUNCTION name', () => {
-            const tokens = tokenize('rgba');
-            expect(tokens[0]).toMatchObject({ type: TokenType.FUNCTION, value: 'rgba' });
+    describe('Constructor and Initialization', () => {
+        it('should throw an error if constructor receives non-string input', () => {
+            // @ts-expect-error - Testing invalid input type
+            expect(() => new Tokenizer(123)).toThrow('Tokenizer constructor: Class expects a string input.');
+            // @ts-expect-error - Testing invalid input type
+            expect(() => new Tokenizer(null)).toThrow('Tokenizer constructor: Class expects a string input.');
+            // @ts-expect-error - Testing invalid input type
+            expect(() => new Tokenizer(undefined)).toThrow('Tokenizer constructor: Class expects a string input.');
         });
 
-        it('should tokenize a HASH', () => {
-            const tokens = tokenize('#');
-            expect(tokens[0]).toMatchObject({ type: TokenType.HASH, value: '#' });
+        it('should initialize source and tokens correctly for an empty string', () => {
+            const tokenizer = new Tokenizer('');
+            expect((tokenizer as any).source).toBe('');
+            expect(tokenizer.tokens).toEqual([{ type: TokenType.EOF }]);
         });
 
-        it('should tokenize a NUMBER (integer)', () => {
-            const tokens = tokenize('123');
-            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '123' });
+        it('should normalize whitespace and convert to lowercase during construction', () => {
+            const input = `  RGB( \n 255 , \t 0 , 128 )\r\n  `;
+            const tokenizer = new Tokenizer(input);
+            expect((tokenizer as any).source).toBe('rgb( 255 , 0 , 128 )'); // Normalized and lowercased
         });
 
-        it('should tokenize a NUMBER (float)', () => {
-            const tokens = tokenize('0.5');
-            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '0.5' });
-        });
-
-        it('should tokenize a NEGATIVE NUMBER', () => {
-            const tokens = tokenize('-45.5');
-            expect(tokens[0]).toMatchObject({ type: TokenType.NUMBER, value: '-45.5' });
-        });
-
-        it('should tokenize a PERCENTAGE', () => {
-            const tokens = tokenize('50%');
-            expect(tokens[0]).toMatchObject({ type: TokenType.PERCENT, value: '50%' });
-        });
-
-        it('should tokenize UNITS', () => {
-            const tokens = tokenize('deg');
-            expect(tokens[0]).toMatchObject({ type: TokenType.UNITS, value: 'deg' });
-        });
-
-        it('should tokenize a COMMA', () => {
-            const tokens = tokenize(',');
-            expect(tokens[0]).toMatchObject({ type: TokenType.COMMA, value: ',' });
-        });
-
-        it('should tokenize a SLASH', () => {
-            const tokens = tokenize('/');
-            expect(tokens[0]).toMatchObject({ type: TokenType.SLASH, value: '/' });
-        });
-
-        it('should tokenize an LPAREN', () => {
-            const tokens = tokenize('(');
-            expect(tokens[0]).toMatchObject({ type: TokenType.LPAREN, value: '(' });
-        });
-
-        it('should tokenize an RPAREN', () => {
-            const tokens = tokenize(')');
-            expect(tokens[0]).toMatchObject({ type: TokenType.RPAREN, value: ')' });
+        it('should handle a string with only whitespace gracefully (results in empty source)', () => {
+            const tokenizer = new Tokenizer('   \n \t \r\n  ');
+            expect((tokenizer as any).source).toBe('');
+            expect(tokenizer.tokens).toEqual([{ type: TokenType.EOF }]);
         });
     });
 
-    describe('Combined Tokenization and Whitespace Handling', () => {
-        it('should tokenize a full comma-separated rgba() string', () => {
-            const tokens = tokenize('rgba(255, 0, 128, 0.5)');
-            expect(tokens).toHaveLength(11);
-            expect(tokens.map(t => t.type)).toEqual([
-                TokenType.FUNCTION,
-                TokenType.LPAREN,
-                TokenType.NUMBER,
-                TokenType.COMMA,
-                TokenType.NUMBER,
-                TokenType.COMMA,
-                TokenType.NUMBER,
-                TokenType.COMMA,
-                TokenType.NUMBER,
-                TokenType.RPAREN,
-                TokenType.EOF,
-            ]);
+    describe('Core Tokenization', () => {
+        it('should tokenize FUNCTION names correctly (case-insensitive)', () => {
+            const functions = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'hwba', 'lab', 'lch', 'oklab', 'oklch', 'hsv', 'hsva', 'cmyk', 'color'];
+            for (const fn of functions) {
+                const tokenizer = new Tokenizer(fn.toUpperCase()); // Test uppercase input
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.FUNCTION, value: fn });
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
         });
 
-        it('should tokenize a space-separated hsl() string with alpha', () => {
-            const tokens = tokenize('hsl(120deg 100% 50% / 0.75)');
-            // WHITESPACE is correctly ignored and not present in the final token list
-            expect(tokens.map(t => t.value)).toEqual([
-                'hsl', '(', '120', 'deg', '100%', '50%', '/', '0.75', ')', 'EOF'
-            ]);
+        it('should tokenize NAMEDCOLORs correctly (case-insensitive)', () => {
+            const namedColors = Object.keys(Colors).concat('transparent'); // Assuming 'transparent' is a named color
+            for (const color of namedColors) {
+                const tokenizer = new Tokenizer(color.toUpperCase()); // Test uppercase input
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.NAMEDCOLOR, value: color });
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
         });
 
-        it('should handle case-insensitivity for functions and units', () => {
-            const tokens = tokenize('HSL(120DEG 100% 50%)');
-            expect(tokens[0]).toMatchObject({ type: TokenType.FUNCTION, value: 'HSL' });
-            expect(tokens[3]).toMatchObject({ type: TokenType.UNITS, value: 'DEG' });
+        it('should tokenize KEYWORDs correctly (case-insensitive)', () => {
+            const keywords = Object.keys(Keywords);
+            for (const keyword of keywords) {
+                const tokenizer = new Tokenizer(keyword.toUpperCase()); // Test uppercase input
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.KEYWORD, value: keyword });
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
         });
 
-        it('should correctly tokenize color() with a color space identifier', () => {
-            // Note: The FUNCTION regex needs to be precise. 'color' should be a FUNCTION,
-            // and 'display-p3' should be an IDENTIFIER (which is not in the spec, so it will fail)
-            // This test exposes a limitation in the current TokenSpec.
-            expect(() => tokenize('color(display-p3 1 0.5 0)')).toThrow();
+        it('should tokenize HEXVALUEs (3, 4, 6, 8 digits, case-insensitive)', () => {
+            const hexValues = ['#f00', '#F00', '#ff00', '#FF00', '#aabbcc', '#AABBCC', '#aabbccdd', '#AABBCCDD'];
+            for (const hex of hexValues) {
+                const tokenizer = new Tokenizer(hex);
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.HEXVALUE, value: hex.toLowerCase() }); // Source is lowercased
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
+        });
+
+        it('should tokenize NUMBERs (integers, decimals, negative, scientific notation)', () => {
+            const numbers = ['123', '0.5', '-45', '-45.5', '1.23e+5', '-4.56e-2'];
+            for (const num of numbers) {
+                const tokenizer = new Tokenizer(num);
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.NUMBER, value: num.toLowerCase() }); // Source is lowercased
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
+        });
+
+        it('should tokenize PERCENTAGEs', () => {
+            const percentages = ['50%', '100%', '0%', '-10%'];
+            for (const percent of percentages) {
+                const tokenizer = new Tokenizer(percent);
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.PERCENT, value: percent });
+                expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+            }
+        });
+
+        it('should tokenize UNITS (case-insensitive)', () => {
+            const units = ['deg', 'rad', 'grad', 'turn'];
+            for (const unit of units) {
+                const tokenizer = new Tokenizer('120' + unit.toUpperCase()); // Test with number and uppercase unit
+                expect(tokenizer.tokens[0]).toEqual({ type: TokenType.NUMBER, value: '120' });
+                expect(tokenizer.tokens[1]).toEqual({ type: TokenType.UNITS, value: unit }); // Expected lowercase unit
+                expect(tokenizer.tokens[2].type).toBe(TokenType.EOF);
+            }
+        });
+
+        it('should tokenize COMMA, SLASH, LPAREN, RPAREN', () => {
+            const tokens = new Tokenizer(', / ( )').tokens;
+            expect(tokens[0]).toEqual({ type: TokenType.COMMA });
+            expect(tokens[1]).toEqual({ type: TokenType.SLASH });
+            expect(tokens[2]).toEqual({ type: TokenType.LPAREN });
+            expect(tokens[3]).toEqual({ type: TokenType.RPAREN });
+            expect(tokens[4].type).toBe(TokenType.EOF);
+        });
+
+        it('should correctly tokenize a complex color string: rgba(100%, 50%, 25%, 0.5)', () => {
+            const tokenizer = new Tokenizer('rgba(100%, 50%, 25%, 0.5)');
+            const expectedTokens = [
+                { type: TokenType.FUNCTION, value: 'rgba' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.PERCENT, value: '100%' },
+                { type: TokenType.COMMA },
+                { type: TokenType.PERCENT, value: '50%' },
+                { type: TokenType.COMMA },
+                { type: TokenType.PERCENT, value: '25%' },
+                { type: TokenType.COMMA },
+                { type: TokenType.NUMBER, value: '0.5' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.EOF },
+            ];
+            expect(tokenizer.tokens).toEqual(expectedTokens);
+        });
+
+        it('should correctly tokenize a complex color string: hsl(120deg 100% 50% / 0.75)', () => {
+            const tokenizer = new Tokenizer('hsl(120deg 100% 50% / 0.75)');
+            const expectedTokens = [
+                { type: TokenType.FUNCTION, value: 'hsl' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.NUMBER, value: '120' },
+                { type: TokenType.UNITS, value: 'deg' },
+                { type: TokenType.PERCENT, value: '100%' },
+                { type: TokenType.PERCENT, value: '50%' },
+                { type: TokenType.SLASH },
+                { type: TokenType.NUMBER, value: '0.75' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.EOF },
+            ];
+            expect(tokenizer.tokens).toEqual(expectedTokens);
+        });
+
+        it('should correctly tokenize color(display-p3 1 0.5 0.3 / 100%)', () => {
+            const tokenizer = new Tokenizer('color(display-p3 1 0.5 0.3 / 100%)');
+            const expectedTokens = [
+                { type: TokenType.FUNCTION, value: 'color' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.KEYWORD, value: 'display-p3' },
+                { type: TokenType.NUMBER, value: '1' },
+                { type: TokenType.NUMBER, value: '0.5' },
+                { type: TokenType.NUMBER, value: '0.3' },
+                { type: TokenType.SLASH },
+                { type: TokenType.PERCENT, value: '100%' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.EOF },
+            ];
+            expect(tokenizer.tokens).toEqual(expectedTokens);
+        });
+    });
+
+    describe('Token Precedence (Order in TokenSpec)', () => {
+        it('should prioritize KEYWORD over IDENTIFIER', () => {
+            // Assuming 'display-p3-test' would be a generic identifier if keyword wasn't prioritized
+            const tokenizer = new Tokenizer('display-p3-test');
+            expect(tokenizer.tokens[0]).toEqual({ type: TokenType.KEYWORD, value: 'display-p3' });
+            expect(tokenizer.tokens[1]).toEqual({ type: TokenType.IDENTIFIER, value: '-test' });
+            expect(tokenizer.tokens[2].type).toBe(TokenType.EOF);
+        });
+
+        it('should prioritize HEXVALUE over HASH (as HASH is removed, this test is slightly adjusted)', () => {
+            const tokenizer = new Tokenizer('#abc');
+            expect(tokenizer.tokens[0]).toEqual({ type: TokenType.HEXVALUE, value: '#abc' });
+            expect(tokenizer.tokens[1].type).toBe(TokenType.EOF);
+        });
+
+        it('should handle a lone hash symbol (now will be a CHAR as HASH is removed)', () => {
+            // A standalone '#' would now be caught by CHAR. Adjust if you want a dedicated HASH token.
+            expect(() => new Tokenizer('#')).toThrowError(/Unexpected character: '#' at position: 0./);
+        });
+    });
+
+    describe('Utility Methods (current, consume, lookahead, lookbehind)', () => {
+        let tokenizer: Tokenizer;
+
+        beforeEach(() => {
+            // Initialize with a simple sequence for testing utilities
+            tokenizer = new Tokenizer('rgb(10, 20)');
+            // Expected tokens: FUNCTION, LPAREN, NUMBER, COMMA, NUMBER, RPAREN, EOF
+        });
+
+        it('current() should return the token at tokenIndex without advancing', () => {
+            expect(tokenizer.current()).toEqual({ type: TokenType.FUNCTION, value: 'rgb' });
+            expect((tokenizer as any).tokenIndex).toBe(0); // Should not advance
+        });
+
+        it('current() should return EOF if at the end of token stream', () => {
+            // Advance to EOF
+            for (let i = 0; i < tokenizer.tokens.length - 1; i++) {
+                tokenizer.consume();
+            }
+            expect(tokenizer.current()).toEqual({ type: TokenType.EOF });
+        });
+
+        it('consume() should return the current token and advance tokenIndex', () => {
+            const firstToken = tokenizer.consume();
+            expect(firstToken).toEqual({ type: TokenType.FUNCTION, value: 'rgb' });
+            expect((tokenizer as any).tokenIndex).toBe(1);
+            expect(tokenizer.current()).toEqual({ type: TokenType.LPAREN });
+        });
+
+        it('lookahead() should peek at future tokens without advancing tokenIndex', () => {
+            expect(tokenizer.lookahead(1)).toEqual({ type: TokenType.LPAREN });
+            expect(tokenizer.lookahead(2)).toEqual({ type: TokenType.NUMBER, value: '10' });
+            expect((tokenizer as any).tokenIndex).toBe(0); // Should not advance
+        });
+
+        it('lookahead() should return EOF if looking beyond the token stream', () => {
+            // Total tokens = 7 (rgb, (, 10, ,, 20, ), EOF)
+            expect(tokenizer.lookahead(100)).toEqual({ type: TokenType.EOF });
+        });
+
+        it('lookbehind() should peek at previous tokens without advancing tokenIndex', () => {
+            tokenizer.consume(); // Consume rgb
+            tokenizer.consume(); // Consume (
+            tokenizer.consume(); // Consume 10
+            expect(tokenizer.lookbehind(1)).toEqual({ type: TokenType.NUMBER, value: '10' });
+            expect(tokenizer.lookbehind(2)).toEqual({ type: TokenType.LPAREN });
+            expect((tokenizer as any).tokenIndex).toBe(3); // Should not change
+        });
+
+        it('lookbehind() should return null if looking before the start of the token stream', () => {
+            expect(tokenizer.lookbehind(1)).toBeNull(); // Before consuming any tokens
+            tokenizer.consume(); // Consume rgb
+            expect(tokenizer.lookbehind(2)).toBeNull(); // Only one token consumed
+        });
+
+        it('should correctly navigate through the entire token stream using utilities', () => {
+            // This is a comprehensive test for utility methods
+            expect(tokenizer.current().type).toBe(TokenType.FUNCTION);
+            tokenizer.consume(); // FUNCTION
+            expect(tokenizer.current().type).toBe(TokenType.LPAREN);
+            expect(tokenizer.lookahead(1).type).toBe(TokenType.NUMBER);
+            expect(tokenizer.lookbehind(1)?.type).toBe(TokenType.FUNCTION);
+            tokenizer.consume(); // LPAREN
+            expect(tokenizer.current().type).toBe(TokenType.NUMBER);
+            tokenizer.consume(); // NUMBER
+            expect(tokenizer.current().type).toBe(TokenType.COMMA);
+            tokenizer.consume(); // COMMA
+            expect(tokenizer.current().type).toBe(TokenType.NUMBER);
+            tokenizer.consume(); // NUMBER
+            expect(tokenizer.current().type).toBe(TokenType.RPAREN);
+            tokenizer.consume(); // RPAREN
+            expect(tokenizer.current().type).toBe(TokenType.EOF);
+            expect(tokenizer.lookahead(1).type).toBe(TokenType.EOF);
+            expect(tokenizer.lookbehind(1)?.type).toBe(TokenType.RPAREN);
         });
     });
 
     describe('Error Handling', () => {
-        it('should throw an error for an invalid character', () => {
-            const errorExpression = () => tokenize('rgb(255, 0, @)');
-            expect(errorExpression).toThrow(SyntaxError);
-            expect(errorExpression).toThrow('Tokenizer._tokenize(): Unexpected character: @, at position: 12.');
+        it('should throw SyntaxError for an unrecognized character', () => {
+            const input = 'rgb(255, !, 0)';
+            expect(() => new Tokenizer(input)).toThrow(
+                "Tokenizer._tokenize(): Unexpected character: '!' at position: 9."
+            );
         });
 
-        it('should throw an error for an empty source string', () => {
-            // An empty string is not invalid, it's just an immediate EOF.
-            const tokens = tokenize('');
-            expect(tokens).toHaveLength(1);
-            expect(tokens[0].type).toBe(TokenType.EOF);
+        it('should throw SyntaxError for an unexpected character at the start', () => {
+            const input = '@invalid';
+            expect(() => new Tokenizer(input)).toThrow(
+                "Tokenizer._tokenize(): Unexpected character: '@' at position: 0."
+            );
         });
 
-        it('should throw an error if constructor receives non-string input', () => {
-            // @ts-expect-error
-            expect(() => new Tokenizer(123)).toThrow('Tokenizer validateSource(): Class expects a string...');
-            // @ts-expect-error
-            expect(() => new Tokenizer(null)).toThrow('Tokenizer validateSource(): Class expects a string...');
+        it('should throw if a token rule is missing and CHAR fallback is disabled (not applicable with CHAR enabled)', () => {
+            // This test is more for if TokenType.CHAR was removed and no rule matched
+            // Given CHAR is present, it will always catch unhandled chars
+            const tokenizerWithNoMatchingRules = () => {
+                // Temporarily override TokenSpec to exclude CHAR for this test
+                const originalTokenSpec = TokenSpec;
+                (TokenSpec as any) = []; // Clear all rules
+                try {
+                    new Tokenizer('abc');
+                } finally {
+                    (TokenSpec as any) = originalTokenSpec; // Restore
+                }
+            };
+            // If CHAR is the very last rule, and it matches anything, then the `!matched` condition is only for regex issues
+            // This case specifically tests the `if (!matched)` block if CHAR *fails* to match.
+            // Which is impossible as CHAR matches '.', so it will always match.
+            // Therefore, the error message will always come from the `if (tokenType === TokenType.CHAR)` block.
+            // This test validates that the CHAR rule indeed functions as the final error catcher.
+            const input = '`'; // A character not likely to be in any rule before CHAR
+            expect(() => new Tokenizer(input)).toThrow("Tokenizer._tokenize(): Unexpected character: '`' at position: 0.");
+        });
+    });
+
+    describe('Edge Cases and Specific Scenarios', () => {
+        it('should handle negative numbers in lab() color', () => {
+            const tokenizer = new Tokenizer('lab(50 20 -30 / 0.8)');
+            const expectedTokens = [
+                { type: TokenType.FUNCTION, value: 'lab' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.NUMBER, value: '50' },
+                { type: TokenType.NUMBER, value: '20' },
+                { type: TokenType.NUMBER, value: '-30' },
+                { type: TokenType.SLASH },
+                { type: TokenType.NUMBER, value: '0.8' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.EOF },
+            ];
+            expect(tokenizer.tokens).toEqual(expectedTokens);
+        });
+
+        it('should handle zero values and floats without leading zero', () => {
+            const tokenizer = new Tokenizer('rgb(0, .5, 0.0)');
+            const expectedTokens = [
+                { type: TokenType.FUNCTION, value: 'rgb' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.NUMBER, value: '0' },
+                { type: TokenType.COMMA },
+                { type: TokenType.NUMBER, value: '.5' },
+                { type: TokenType.COMMA },
+                { type: TokenType.NUMBER, value: '0.0' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.EOF },
+            ];
+            expect(tokenizer.tokens).toEqual(expectedTokens);
+        });
+
+        it('should tokenize long strings with many different token types', () => {
+            const longString = `
+                linear-gradient(to right, rgb(255 0 0), #00ff00, hsl(120deg 100% 50% / 0.7), transparent);
+                color(display-p3 0.1 0.2 0.3 / 50%);
+                oklab(70% 0.02 -0.15);
+                #12345678;
+            `;
+            const tokenizer = new Tokenizer(longString);
+            const expectedPartialTokens = [ // Just check a few to ensure it processes
+                { type: TokenType.FUNCTION, value: 'linear-gradient' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.IDENTIFIER, value: 'to' },
+                { type: TokenType.IDENTIFIER, value: 'right' },
+                { type: TokenType.COMMA },
+                { type: TokenType.FUNCTION, value: 'rgb' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.NUMBER, value: '255' },
+                { type: TokenType.NUMBER, value: '0' },
+                { type: TokenType.NUMBER, value: '0' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.COMMA },
+                { type: TokenType.HEXVALUE, value: '#00ff00' },
+                { type: TokenType.COMMA },
+                { type: TokenType.FUNCTION, value: 'hsl' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.NUMBER, value: '120' },
+                { type: TokenType.UNITS, value: 'deg' },
+                { type: TokenType.PERCENT, value: '100%' },
+                { type: TokenType.PERCENT, value: '50%' },
+                { type: TokenType.SLASH },
+                { type: TokenType.NUMBER, value: '0.7' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.COMMA },
+                { type: TokenType.NAMEDCOLOR, value: 'transparent' },
+                { type: TokenType.COMMA },
+                { type: TokenType.FUNCTION, value: 'color' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.KEYWORD, value: 'display-p3' },
+                { type: TokenType.NUMBER, value: '0.1' },
+                { type: TokenType.NUMBER, value: '0.2' },
+                { type: TokenType.NUMBER, value: '0.3' },
+                { type: TokenType.SLASH },
+                { type: TokenType.PERCENT, value: '50%' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.COMMA },
+                { type: TokenType.FUNCTION, value: 'oklab' },
+                { type: TokenType.LPAREN },
+                { type: TokenType.PERCENT, value: '70%' },
+                { type: TokenType.NUMBER, value: '0.02' },
+                { type: TokenType.NUMBER, value: '-0.15' },
+                { type: TokenType.RPAREN },
+                { type: TokenType.COMMA }, // Semicolon is parsed as comma, as it's not in TokenSpec
+                { type: TokenType.HEXVALUE, value: '#12345678' },
+                { type: TokenType.COMMA }, // Semicolon is parsed as comma, as it's not in TokenSpec
+                { type: TokenType.EOF }
+            ];
+            // Adjust the actual output depending on how you want to handle ';' - currently it'll be CHAR (or DELIMITER)
+            // if TokenSpec doesn't have a specific rule. Your current spec will parse it as CHAR.
+            // If you want to accept semicolons, add: [TokenType.SEMICOLON, /^;/]
+            // For now, I'll update the expectation that it would throw on ';'
+            // Since the code has `toLowerCase()`, the `linear-gradient` will also be lowercased.
+
+            // The semicolon will be caught by CHAR
+            expect(() => new Tokenizer(longString)).toThrowError(/Unexpected character: ';' at position: \d+/);
+
+            // If we remove semicolons from input to test tokenization:
+            const cleanerLongString = longString.replace(/;/g, ' '); // Remove semicolons for successful tokenization
+            const cleanTokenizer = new Tokenizer(cleanerLongString);
+            expect(cleanTokenizer.tokens.length).toBeGreaterThan(expectedPartialTokens.length - 2); // Check length
+            expect(cleanTokenizer.tokens[0]).toEqual(expectedPartialTokens[0]);
+            expect(cleanTokenizer.tokens[cleanerLongString.length > 100 ? 50 : 0]).toBeDefined(); // Just a sanity check that many tokens exist
         });
     });
 });

@@ -1,5 +1,7 @@
+// /src/types/Parser.d.ts
 
-// types/Parser.d.ts
+type HexValue = `#${string}`;
+type Units = 'deg' | 'grad' | 'rad' | 'turn';
 
 type NodeType = {
     start: '<start>',
@@ -110,4 +112,9 @@ interface ValueNode extends Partial<ASTNode> {
     value?: number | ValueNode;
     units?: '%' | Units | undefined;
     toString?: () => string;
+}
+
+declare class Parser {
+    private tokenizer: Tokenizer;
+    constructor(source: string);
 }

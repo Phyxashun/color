@@ -1,5 +1,6 @@
 /// <reference types='./types/Parser.d.ts' />
 /// <reference types='./types/Tokenizer.d.ts' />
+// /src/Parser.ts
 
 import Tokenizer, { TokenType } from "./Tokenizer.ts";
 
@@ -278,7 +279,7 @@ export default class Parser {
         };
     }
 
-    private eat(tokenType: TokenTypeValue): Token {
+    private eat(tokenType: TokenType): Token {
         const token = this.tokenizer.current();
 
         if (token.type !== tokenType) {

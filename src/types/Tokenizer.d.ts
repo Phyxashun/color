@@ -1,65 +1,57 @@
-type ClassConstructor<T> = new () => T;
-type ConstructorFunction = < T >(Ctor: ClassConstructor<T>) => T
+// /src/types/Tokenizer.d.ts
 
-type ColorModel =
-    | 'rgb'
-    | 'rgba'
-    | 'hsl'
-    | 'hsla'
-    | 'hwb'
-    | 'hwba'
-    | 'lab'
-    | 'lch'
-    | 'oklab'
-    | 'oklch'
-    | 'hsv'
-    | 'hsva'
-    | 'cmyk'
-    | 'color'
-
-type TokenType = {
-    FUNCTION: 'FUNCTION',
-    IDENTIFIER: 'IDENTIFIER',
-    HASH: 'HASH',
-    HEXVALUE: 'HEXVALUE',
-    NUMBER: 'NUMBER',
-    PERCENT: 'PERCENT',
-    UNITS: 'UNITS',
-    COMMA: 'COMMA',
-    SLASH: 'SLASH',
-    LPAREN: 'LPAREN',
-    RPAREN: 'RPAREN',
-    DELIMITER: 'DELIMITER',
-    WHITESPACE: 'WHITESPACE',
-    CHAR: 'CHAR',
-    EOF: 'EOF'
+declare enum TokenType {
+    FUNCTION = 'FUNCTION',
+    NAMEDCOLOR = 'NAMEDCOLOR',
+    KEYWORD = 'KEYWORD',
+    IDENTIFIER = 'IDENTIFIER',
+    HEXVALUE = 'HEXVALUE',
+    NUMBER = 'NUMBER',
+    PERCENT = 'PERCENT',
+    UNITS = 'UNITS',
+    COMMA = 'COMMA',
+    SLASH = 'SLASH',
+    LPAREN = 'LPAREN',
+    RPAREN = 'RPAREN',
+    DELIMITER = 'DELIMITER',
+    WHITESPACE = 'WHITESPACE',
+    CHAR = 'CHAR',
+    EOF = 'EOF'
 }
 
-type TokenTypeValue = TokenType[keyof TokenType];
+interface TokenNode<T extends TokenType> {
+    type: T;
+}
 
-type Units = 'deg' | 'rad' | 'grad' | 'turn';
+interface TokenValueNode<T extends TokenType> extends TokenNode<T> {
+    value: string;
+}
 
-type HexValue = `#${string}`;
-type AngleValue = `${number}${Units}`;
-type PercentValue = `${number}%`;
-type NumericValue = number | number[];
+type Token =
+    | TokenNode<TokenType.WHITESPACE>
+    | TokenValueNode<TokenType.FUNCTION>
+    | TokenValueNode<TokenType.NAMEDCOLOR>
+    | TokenValueNode<TokenType.KEYWORD>
+    | TokenNode<TokenType.LPAREN>
+    | TokenNode<TokenType.RPAREN>
+    | TokenNode<TokenType.COMMA>
+    | TokenNode<TokenType.SLASH>
+    | TokenValueNode<TokenType.UNITS>
+    | TokenValueNode<TokenType.PERCENT>
+    | TokenValueNode<TokenType.NUMBER>
+    | TokenValueNode<TokenType.HEXVALUE>
+    | TokenValueNode<TokenType.DELIMITER>
+    | TokenValueNode<TokenType.CHAR>
+    | TokenValueNode<TokenType.IDENTIFIER>
+    | TokenNode<TokenType.EOF>
 
-type TokenValue = string | NumericValue;
+type TokenSpecTuple = [TokenType, RegExp];
 
-type Token = {
-    type: TokenTypeValue,
-    value: TokenValue,
-};
-
-type TokenSpecTuple = [TokenTypeValue, RegExp];
-
-type TokenSpec = Array<TokenSpecTuple>;
+type TokenSpec = TokenSpecTuple[];
 
 declare class Tokenizer {
     private readonly source: string;
     private cursor: number;
     tokens: Token[];
-
     constructor(...args: any[]);
 }
-

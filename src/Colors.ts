@@ -1,3 +1,5 @@
+// /src/Colors.ts
+
 /**
  * X11 color names
  * http://www.w3.org/TR/css3-color/#svg-color
@@ -150,6 +152,7 @@ export const Colors = {
     teal: '#008080',
     thistle: '#d8bfd8',
     tomato: '#ff6347',
+    transparent: '#ffffff00',
     turquoise: '#40e0d0',
     violet: '#ee82ee',
     wheat: '#f5deb3',
