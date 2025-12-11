@@ -90,7 +90,7 @@ export default class Parser {
         this.eat(TokenType.EOF);
         return {
             type: NodeType.start,
-            value: color,
+            children: color,
         };
     }
 
