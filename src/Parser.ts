@@ -109,8 +109,9 @@ export default class Parser {
         } else if (currentToken.type === TokenType.FUNCTION) {
             value = this.FunctionColor();
         } else {
+            const tokenValue = 'value' in currentToken ? currentToken.value : currentToken.type;
             throw new SyntaxError(
-                `Unexpected token: "${currentToken.value || currentToken.type}", expected HEXVALUE or FUNCTION`
+                `Unexpected token: "${tokenValue}", expected HEXVALUE or FUNCTION`
             );
         }
 
@@ -127,6 +128,11 @@ export default class Parser {
     private HexColor(): HexNode {
         const hexToken = this.eat(TokenType.HEXVALUE);
 
+        // Type guard: HEXVALUE tokens always have a value property
+        if (!('value' in hexToken)) {
+            throw new Error('Internal error: HEXVALUE token missing value');
+        }
+
         return {
             type: NodeType.hex,
             value: hexToken.value as HexValue,
@@ -139,6 +145,12 @@ export default class Parser {
      */
     private FunctionColor(): FunctionNode {
         const functionToken = this.eat(TokenType.FUNCTION);
+
+        // Type guard: FUNCTION tokens always have a value property
+        if (!('value' in functionToken)) {
+            throw new Error('Internal error: FUNCTION token missing value');
+        }
+
         this.eat(TokenType.LPAREN);
         const channels = this.ChannelsList();
         this.eat(TokenType.RPAREN);
@@ -158,8 +170,10 @@ export default class Parser {
         let value: SpaceNode | CommaNode;
 
         // Special handling for color() function with color space identifier
-        if (this.tokenizer.current().type === TokenType.IDENTIFIER) {
-            this.eat(TokenType.IDENTIFIER);
+        // Accept both IDENTIFIER and KEYWORD tokens (like 'display-p3')
+        if (this.tokenizer.current().type === TokenType.IDENTIFIER ||
+            this.tokenizer.current().type === TokenType.KEYWORD) {
+            this.tokenizer.consume();
         }
 
         // Parse the first value
@@ -284,10 +298,13 @@ export default class Parser {
         this.eat(TokenType.SLASH);
         const value = this.Value();
 
+        // Alpha channels can only be 'number' or 'percentage', not 'angle'
+        const valueType = value.valueType === 'angle' ? 'number' : (value.valueType || 'number');
+
         return {
             type: NodeType.alpha,
             value,
-            valueType: value.valueType || 'number',
+            valueType: valueType as 'number' | 'percentage',
             toString: () => value.toString?.() || String(value.value),
         };
     }
@@ -301,6 +318,12 @@ export default class Parser {
         // percentage
         if (tok.type === TokenType.PERCENT) {
             const t = this.eat(TokenType.PERCENT);
+
+            // Type guard: PERCENT tokens always have a value property
+            if (!('value' in t)) {
+                throw new Error('Internal error: PERCENT token missing value');
+            }
+
             return {
                 type: NodeType.value,
                 valueType: 'percentage',
@@ -312,11 +335,24 @@ export default class Parser {
 
         // number-based value
         const numTok = this.eat(TokenType.NUMBER);
+
+        // Type guard: NUMBER tokens always have a value property
+        if (!('value' in numTok)) {
+            throw new Error('Internal error: NUMBER token missing value');
+        }
+
         const num = parseFloat(numTok.value);
 
         // angle unit?
         if (this.tokenizer.current().type === TokenType.UNITS) {
-            const u = this.eat(TokenType.UNITS).value as Units;
+            const unitTok = this.eat(TokenType.UNITS);
+
+            // Type guard: UNITS tokens always have a value property
+            if (!('value' in unitTok)) {
+                throw new Error('Internal error: UNITS token missing value');
+            }
+
+            const u = unitTok.value as Units;
             return {
                 type: NodeType.value,
                 valueType: 'angle',
@@ -338,8 +374,9 @@ export default class Parser {
         const token = this.tokenizer.current();
 
         if (token.type !== tokenType) {
+            const tokenValue = 'value' in token ? token.value : token.type;
             throw new SyntaxError(
-                `Unexpected token: current token: "${token.value || token.type} (${token.type})", expected: "${tokenType}"`
+                `Unexpected token: current token: "${tokenValue} (${token.type})", expected: "${tokenType}"`
             );
         }
 
