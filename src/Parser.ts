@@ -1,4 +1,4 @@
-/// <reference types='./types/Parser.d.ts' />
+//// <reference types='./types/Parser.d.ts' />
 /// <reference types='./types/Tokenizer.d.ts' />
 // /src/Parser.ts
 
@@ -78,28 +78,27 @@ export default class Parser {
      * @param string - CSS color string (e.g., "rgb(255, 0, 0)", "#fff", "hsl(120 100% 50%)")
      * @returns AST representing the parsed color
      */
-    parse(): StartNode {
+    parse(): ASTNode {
         return this.Start();
     }
 
     /**
      * <start> ::= <color> EOF
      */
-    private Start(): StartNode {
+    private Start(): ASTNode {
         const color = this.Color();
         this.eat(TokenType.EOF);
         return {
             type: NodeType.start,
             value: color,
-            toString: () => color.toString(),
         };
     }
 
     /**
      * <color> ::= <hex-color> | <function-color>
      */
-    private Color(): ColorNode {
-        let value: HexNode | FunctionNode;
+    private Color(): ASTNode {
+        let value: ASTNode;
 
         const currentToken = this.tokenizer.current();
 
@@ -118,14 +117,13 @@ export default class Parser {
         return {
             type: NodeType.color,
             value,
-            toString: () => value.toString(),
         };
     }
 
     /**
      * <hexcolor> ::= HEXVALUE
      */
-    private HexColor(): HexNode {
+    private HexColor(): ASTNode {
         const hexToken = this.eat(TokenType.HEXVALUE);
 
         // Type guard: HEXVALUE tokens always have a value property
@@ -143,7 +141,7 @@ export default class Parser {
     /**
      * <function-color> ::= FUNCTION LPAREN <channels> RPAREN
      */
-    private FunctionColor(): FunctionNode {
+    private FunctionColor(): ASTNode {
         const functionToken = this.eat(TokenType.FUNCTION);
 
         // Type guard: FUNCTION tokens always have a value property
@@ -166,7 +164,7 @@ export default class Parser {
     /**
      * <channels-list> ::= <space-separated-list> | <comma-separated-list>
      */
-    private ChannelsList(): ChannelsNode {
+    private ChannelsList(): ASTNode {
         let value: SpaceNode | CommaNode;
 
         // Special handling for color() function with color space identifier
@@ -195,7 +193,7 @@ export default class Parser {
     /**
      * <space-separated-list> ::= <value> <value> <value> [<alpha-channel>]
      */
-    private SpaceSeparatedListContinuation(firstValue: ValueNode): SpaceNode {
+    private SpaceSeparatedListContinuation(firstValue: ASTNode): ASTNode {
         const secondValue = this.Value();
         const thirdValue = this.Value();
 
@@ -243,15 +241,15 @@ export default class Parser {
     /**
      * <comma-separated-list> ::= <value> COMMA <value> COMMA <value> [<alpha>]
      */
-    private CommaSeparatedListContinuation(firstValue: ValueNode): CommaNode {
+    private CommaSeparatedListContinuation(firstValue: ASTNode): ASTNode {
         this.eat(TokenType.COMMA);
         const secondValue = this.Value();
 
         this.eat(TokenType.COMMA);
         const thirdValue = this.Value();
 
-        let alpha: AlphaNode | undefined = undefined;
-        let fourthValue: ValueNode | undefined = undefined;
+        let alpha: ASTNode | undefined = undefined;
+        let fourthValue: ASTNode | undefined = undefined;
 
         if (this.tokenizer.current().type === TokenType.COMMA) {
             this.eat(TokenType.COMMA);
@@ -294,82 +292,82 @@ export default class Parser {
     /**
      * <alpha-channel> ::= SLASH <value>
      */
-    private AlphaChannel(): AlphaNode {
+    private AlphaChannel(): ASTNode {
         this.eat(TokenType.SLASH);
-        const value = this.Value();
+        const valueNode = this.Value() as ASTNode;
 
         // Alpha channels can only be 'number' or 'percentage', not 'angle'
-        const valueType = value.valueType === 'angle' ? 'number' : (value.valueType || 'number');
+        const valueType = valueNode.name === 'angle' ? 'number' : (valueNode.name || 'number');
 
         return {
             type: NodeType.alpha,
-            value,
-            valueType: valueType as 'number' | 'percentage',
-            toString: () => value.toString?.() || String(value.value),
+            name: valueType,
+            value: valueNode,
+            toString: () => valueNode.toString() || String(valueNode.value),
         };
     }
 
     /**
      * <value> ::= NUMBER | PERCENT | NUMBER UNITS
      */
-    private Value(): ValueNode {
-        const tok = this.tokenizer.current();
+    private Value(): ASTNode {
+        const token = this.tokenizer.current();
 
         // percentage
-        if (tok.type === TokenType.PERCENT) {
-            const t = this.eat(TokenType.PERCENT);
+        if (token.type === TokenType.PERCENT) {
+            const percentToken = this.eat(TokenType.PERCENT);
 
             // Type guard: PERCENT tokens always have a value property
-            if (!('value' in t)) {
+            if (!('value' in percentToken)) {
                 throw new Error('Internal error: PERCENT token missing value');
             }
 
             return {
                 type: NodeType.value,
-                valueType: 'percentage',
-                value: parseFloat(t.value),
+                name: 'percentage',
+                value: parseFloat(percentToken.value),
                 units: '%',
-                toString: () => `${parseFloat(t.value)}%`,
             };
         }
 
-        // number-based value
-        const numTok = this.eat(TokenType.NUMBER);
+        // number-based value -> (token.type === TokenType.NUMBER)
+        const numToken = this.eat(TokenType.NUMBER);
 
         // Type guard: NUMBER tokens always have a value property
-        if (!('value' in numTok)) {
+        if (!('value' in numToken)) {
             throw new Error('Internal error: NUMBER token missing value');
         }
 
-        const num = parseFloat(numTok.value);
+        const num = parseFloat(numToken.value);
 
         // angle unit?
-        if (this.tokenizer.current().type === TokenType.UNITS) {
-            const unitTok = this.eat(TokenType.UNITS);
+        if (token.type === TokenType.UNITS) {
+            const unitToken = this.eat(TokenType.UNITS);
 
             // Type guard: UNITS tokens always have a value property
-            if (!('value' in unitTok)) {
+            if (!('value' in unitToken)) {
                 throw new Error('Internal error: UNITS token missing value');
             }
 
-            const u = unitTok.value as Units;
+            const unit = unitToken.value;
             return {
                 type: NodeType.value,
-                valueType: 'angle',
+                name: 'angle',
                 value: num,
-                units: u,
-                toString: () => `${num}${u}`,
+                units: unit,
+                toString: () => `${num}${unit}`,
             };
         }
 
         return {
             type: NodeType.value,
-            valueType: 'number',
+            name: 'number',
             value: num,
             toString: () => String(num),
         };
     }
 
+    // Consume a token
     private eat(tokenType: TokenType): Token {
         const token = this.tokenizer.current();
 

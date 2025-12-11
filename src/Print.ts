@@ -91,6 +91,11 @@ interface PrintInstance {
     data: PrintEntry[];
 
     /**
+     * Outputs all accumulated log entries to log file and clears the data array.
+     */
+    log(): void;
+
+    /**
      * Outputs all accumulated log entries to console.table and clears the data array.
      */
     (): void;
@@ -158,6 +163,50 @@ const createPrintInstance = (): PrintInstance => {
                 value: value,
             });
         }
+    };
+
+    /**
+     * Outputs all accumulated log entries to log file and clears the data array.
+     */
+    callableFunction.log = (): void => {
+        if (internalData.length === 0) {
+            console.log("No information is currently loaded into the table.");
+            return;
+        }
+
+        const fs = require("fs");
+        const path = require("path");
+
+        // Create date string YYYY-MM-DD
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        const dateString = `${yyyy}-${mm}-${dd}`;
+
+        // Build log directory & file path
+        const logDir = path.resolve("./test/log");
+        const logFile = path.join(logDir, `${dateString}-print.log`);
+
+        // Ensure directory exists
+        fs.mkdirSync(logDir, { recursive: true });
+
+        // Build log text lines
+        const now = () => new Date().toISOString().replace("T", " ").split(".")[0];
+
+        const lines = internalData.map(entry => {
+            const v = entry.value !== undefined ? entry.value : "";
+            return `${now()} | ${entry.message}${v !== "" ? " | " + v : ""}`;
+        });
+
+        // Append to file
+        fs.appendFileSync(logFile, lines.join("\n") + "\n", "utf8");
+
+        // Confirm to console
+        console.log(`Wrote ${internalData.length} entries to ${logFile}`);
+
+        // Clear internal data after writing
+        internalData = [];
     };
 
     /**

@@ -62,8 +62,8 @@ describe('Parser', () => {
 
         it('should parse rgba() with comma-separated values and numeric alpha', () => {
             const ast = parse('rgba(255, 0, 128, 0.5)');
-            const funcNode = (ast.value as ColorNode).value as FunctionNode;
-            const channels = funcNode.value.value as CommaNode;
+            const funcNode = (ast.value).value;
+            const channels = funcNode.value.value;
 
             expect(channels.type).toBe(NodeType.comma);
             expect(channels.value.length).toBe(3);
