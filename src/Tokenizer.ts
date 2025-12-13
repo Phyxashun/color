@@ -2,7 +2,9 @@
 // /src/Tokenizer.ts
 
 import { Colors } from './Colors.ts';
-import { Print } from './Print.ts';
+import { Print } from './utils/Print.ts';
+
+Print.off();
 
 export const Keywords = {
     'display-p3': 'display-p3',
@@ -26,7 +28,7 @@ export enum TokenType {
     LPAREN = 'LPAREN',               // '('
     RPAREN = 'RPAREN',               // ')'
     DELIMITER = 'DELIMITER',         // Any delimiter/general punctuation not already captured
-    WHITESPACE = 'WHITESPACE',       // ' '
+    WHITESPACE = 'WHITESPACE',       // All other whitespace
     CHAR = 'CHAR',                   // Fallback for any unexpected character
     EOF = 'EOF'                      // End of line/string
 }
@@ -107,15 +109,13 @@ export default class Tokenizer {
         Print();
     }
 
-    /**
-     * Returns true if the cursor is at the end of source.
-     */
+    // Returns true if the cursor is at the end of source.
     private isEOF() {
         return this.cursor >= this.source.length;
     }
 
     /**
-     * Returns the current token without consuming it.
+     * @returns The current token without consuming it.
      */
     public current(): Token {
         if (this.tokenIndex >= this.tokens.length) {
@@ -198,12 +198,14 @@ export default class Tokenizer {
                             tokens.push({ type: tokenType, value: match[0] });
                         }
                     }
+
                     // Advance cursor by the length of the matched value
                     this.cursor += match[0].length;
                     matched = true;
                     break; // Move to the next part of the source string
                 }
             }
+
             if (!matched) {
                 // This case should ideally be caught by TokenType.CHAR.
                 // If it's reached, it indicates a regex issue or an unhandled edge case

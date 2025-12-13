@@ -1,16 +1,16 @@
+// /test/NewPrint.test.ts
 import { describe, it, beforeEach, afterEach, expect, vi } from "vitest";
-import { Print } from "../src/utils/NewPrint";
+import { Print } from "../src/NewPrint";
+import fs from "fs";
+import path from "path";
 import Counter from "../src/utils/Counter";
 
 vi.mock("fs");
 vi.mock("path");
 
-const suite = new Counter().auto().alpha();
+const letter = new Counter().auto().alpha();
 
-// TEST: <suite>.<number>.
-const label = (s: string, t: number) => `TEST: ${s}.${t}.`;
-
-describe("TEST: Print Utility", () => {
+describe("TEST: NewPrint Utility", () => {
 
     beforeEach(() => {
         Print.reset();
@@ -25,39 +25,28 @@ describe("TEST: Print Utility", () => {
     });
 
     // -------------------------------------------------------
-    // Helper: define a suite block the clean way
-    // -------------------------------------------------------
-    const defineSuite = (letter: string, title: string, body: (S: string, test: Counter) => void) => {
-        describe(`TEST: ${letter}. ${title}`, () => {
-            suite.set(letter);
-            const S = suite.get();
-            const test = new Counter();
-            body(S, test);
-        });
-    };
-
-    // -------------------------------------------------------
     // A: add()
     // -------------------------------------------------------
+    describe(`TEST: ${letter}. add() basic behavior`, () => {
+        letter.set("A");
+        const num = new Counter();
 
-    defineSuite("A", "add() basic behavior", (S, test) => {
-
-        it(`${label(S, test.next())} should add a simple message`, () => {
+        it(`${letter}.${num}. should add a simple message`, () => {
             Print.add("Hello");
             expect(Print.data).toEqual([{ message: "Hello" }]);
         });
 
-        it(`${label(S, test.next())} should add primitive value`, () => {
+        it(`${letter}.${num}. should add primitive value`, () => {
             Print.add("Age:", 33);
             expect(Print.data).toEqual([{ message: "Age:", value: 33 }]);
         });
 
-        it(`${label(S, test.next())} should handle string`, () => {
+        it(`${letter}.${num}. should handle string`, () => {
             Print.add("User:", "Dustin");
             expect(Print.data).toEqual([{ message: "User:", value: "Dustin" }]);
         });
 
-        it(`${label(S, test.next())} should stringify object`, () => {
+        it(`${letter}.${num}. should stringify object`, () => {
             const obj = { a: 1, b: true };
             Print.add("Obj:", obj);
             expect(Print.data[0]).toEqual({
@@ -66,38 +55,38 @@ describe("TEST: Print Utility", () => {
             });
         });
 
-        it(`${label(S, test.next())} should stringify nested objects`, () => {
+        it(`${letter}.${num}. should stringify nested objects`, () => {
             const obj = { a: { b: 2 } };
             Print.add("Nested:", obj);
             expect(Print.data[0].value).toBe(JSON.stringify(obj));
         });
 
-        it(`${label(S, test.next())} should stringify arrays`, () => {
+        it(`${letter}.${num}. should stringify arrays`, () => {
             Print.add("Arr:", [1, 2, 3]);
             expect(Print.data[0].value).toBe("[1,2,3]");
         });
 
-        it(`${label(S, test.next())} should throw with no args`, () => {
+        it(`${letter}.${num}. should throw with no args`, () => {
             expect(() => Print.add()).toThrow(SyntaxError);
         });
 
-        it(`${label(S, test.next())} should treat null as primitive`, () => {
+        it(`${letter}.${num}. should treat null as primitive`, () => {
             Print.add("Null:", null);
             expect(Print.data[0]).toEqual({ message: "Null:", value: null });
         });
 
-        it(`${label(S, test.next())} should stringify Date`, () => {
+        it(`${letter}.${num}. should stringify Date`, () => {
             const d = new Date("2025-01-01T00:00:00Z");
             Print.add("When:", d);
             expect(Print.data[0].value).toBe(JSON.stringify(d));
         });
 
-        it(`${label(S, test.next())} should accept empty string`, () => {
+        it(`${letter}.${num}. should accept empty string`, () => {
             Print.add("", 123);
             expect(Print.data[0]).toEqual({ message: "", value: 123 });
         });
 
-        it(`${label(S, test.next())} undefined + undefined throws`, () => {
+        it(`${letter}.${num}. undefined + undefined throws`, () => {
             expect(() => Print.add(undefined, undefined)).toThrow(SyntaxError);
         });
     });
@@ -105,20 +94,24 @@ describe("TEST: Print Utility", () => {
     // -------------------------------------------------------
     // B: mixed types
     // -------------------------------------------------------
+    letter.set("B");
 
-    defineSuite("B", "mixed type handling", (S, test) => {
+    describe(`TEST: ${letter}. mixed type handling`, () => {
 
-        it(`${label(S, test.next())} should allow booleans`, () => {
+        letter.set("B");
+        const num = new Counter();
+
+        it(`${letter}.${num}. should allow booleans`, () => {
             Print.add("Flag:", false);
             expect(Print.data[0]).toEqual({ message: "Flag:", value: false });
         });
 
-        it(`${label(S, test.next())} should allow zero`, () => {
+        it(`${letter}.${num}. should allow zero`, () => {
             Print.add("Zero:", 0);
             expect(Print.data[0]).toEqual({ message: "Zero:", value: 0 });
         });
 
-        it(`${label(S, test.next())} should accept symbols`, () => {
+        it(`${letter}.${num}. should accept symbols`, () => {
             const sym = Symbol("test");
             Print.add("Symbol:", sym);
             expect(Print.data[0]).toEqual({ message: "Symbol:", value: sym });
@@ -128,20 +121,24 @@ describe("TEST: Print Utility", () => {
     // -------------------------------------------------------
     // C: data property
     // -------------------------------------------------------
+    letter.set("C");
 
-    defineSuite("C", "data property", (S, test) => {
+    describe(`TEST: ${letter}. data property`, () => {
 
-        it(`${label(S, test.next())} should allow reading`, () => {
+        letter.set("C");
+        const num = new Counter();
+
+        it(`${letter}.${num}. should allow reading`, () => {
             Print.add("Hello");
             expect(Print.data.length).toBe(1);
         });
 
-        it(`${label(S, test.next())} should allow overwriting`, () => {
+        it(`${letter}.${num}. should allow overwriting`, () => {
             Print.data = [{ message: "X", value: 1 }];
             expect(Print.data).toEqual([{ message: "X", value: 1 }]);
         });
 
-        it(`${label(S, test.next())} should replace data`, () => {
+        it(`${letter}.${num}. should replace data`, () => {
             Print.add("A");
             Print.data = [{ message: "B" }];
             expect(Print.data).toEqual([{ message: "B" }]);
@@ -149,31 +146,63 @@ describe("TEST: Print Utility", () => {
     });
 
     // -------------------------------------------------------
-    // D: Print() callable
+    // D: execute()/callable behavior
     // -------------------------------------------------------
+    letter.set("D");
 
-    defineSuite("D", "Print() callable behavior", (S, test) => {
+    describe(`TEST: ${letter}. execute() & callable behavior`, () => {
 
-        it(`${label(S, test.next())} should table() then clear`, () => {
-            const mock = vi.spyOn(console, "table").mockImplementation(() => { });
+        letter.set("D");
+        const num = new Counter();
+
+        it(`${letter}.${num}. should execute and display table`, () => {
+            const tableMock = vi.spyOn(console, "table").mockImplementation(() => { });
             Print.add("X", 123);
             Print();
-            expect(mock).toHaveBeenCalledTimes(1);
+            expect(tableMock).toHaveBeenCalled();
             expect(Print.data).toEqual([
                 {
-                    message: 'X',
-                    value: 123,
+                    "message": "X",
+                    "value": 123,
                 }
             ]);
         });
 
-        it(`${label(S, test.next())} should log when empty`, () => {
-            const mock = vi.spyOn(console, "log").mockImplementation(() => { });
+        it(`${letter}.${num}. should log when empty`, () => {
+            const logMock = vi.spyOn(console, "log").mockImplementation(() => { });
             Print();
-            expect(mock).toHaveBeenCalledWith(
+            expect(logMock).toHaveBeenCalledWith(
                 "No information is currently loaded into the table."
             );
         });
     });
 
+    // -------------------------------------------------------
+    // E: enable/disable/reset
+    // -------------------------------------------------------
+    letter.set("E");
+
+    describe(`TEST: ${letter}. on/off/reset behavior`, () => {
+
+        letter.set("E");
+        const num = new Counter();
+
+        it(`${letter}.${num}. should not add when off`, () => {
+            Print.off();
+            Print.add("Hello");
+            expect(Print.data).toEqual([]);
+        });
+
+        it(`${letter}.${num}. should add when on`, () => {
+            Print.on();
+            Print.add("Hello");
+            expect(Print.data).toEqual([{ message: "Hello" }]);
+        });
+
+        it(`${letter}.${num}. should reset data`, () => {
+            Print.add("X");
+            Print.reset();
+            expect(Print.data).toEqual([]);
+        });
+    });
 });

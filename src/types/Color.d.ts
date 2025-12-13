@@ -1,17 +1,18 @@
 // /src/types/Color.d.ts
 
-type ColorModel =
-    | 'rgb'
-    | 'rgba'
-    | 'hsl'
-    | 'hsla'
-    | 'hwb'
-    | 'hwba'
-    | 'lab'
-    | 'lch'
-    | 'oklab'
-    | 'oklch'
-    | 'hsv'
-    | 'hsva'
-    | 'cmyk'
-    | 'color'
+declare enum ColorModel {
+    rgb = 'rgb',
+    rgba = 'rgba',
+    hsl = 'hsl',
+    hsla = 'hsla',
+    hwb = 'hwb',
+    hwba = 'hwba',
+    lab = 'lab',
+    lch = 'lch',
+    oklab = 'oklab',
+    oklch = 'oklch',
+    hsv = 'hsv',
+    hsva = 'hsva',
+    cmyk = 'cmyk',
+    color = 'color',
+}

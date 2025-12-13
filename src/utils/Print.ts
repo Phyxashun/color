@@ -1,6 +1,11 @@
 // /src/Print.ts
 
+import fs from "fs";
+import path from "path";
+
 /**
+ ** Print() - Print utility
+ * 
  * This code defines a utility named createPrintInstance that generates a 
  * callable function, named Print, which acts as a structured logger. It 
  * allows you to log messages and data in a structured format and display 
@@ -12,62 +17,86 @@
  * Assuming the code provided is in a file named PrintUtil.ts (or similar), 
  * you would import the Print instance:
  * 
- **     import Print from './Print.ts';
+ **    import Print from './Print.ts';
  *
  * 2. Basic Usage (Logging Messages)
  * You can call Print directly like a function to log data. It accepts an 
  * optional message string and up to two optional values (value, value2).
  * 
- **     // Log a simple message
- **     Print("Application starting up.");
- **     // Output is stored internally until you call Print.log()
+ **    // Log a simple message
+ **     Print.add("Application starting up."); // Use Print.add instead of direct call for consistency
+ **    // Output is stored internally until you call Print.log()
  *
  * 3. Logging Data (Values and Objects)
  * The utility intelligently handles different types of inputs, 
  * automatically using JSON.stringify for objects:
  * 
- **     const user = { id: 101, name: "Alice", active: true };
- **     const details = { loginCount: 42, lastLogin: new Date() };
+ **    const user = { id: 101, name: "Alice", active: true };
+ **    const details = { loginCount: 42, lastLogin: new Date() };
  **
- **     // Log with a message and a single value (number/string/object)
- **     Print("User logged in:", user.id);
- **     Print("User details object:", user); // Object is stringified
+ **    // Log with a message and a single value (number/string/object)
+ **    Print.add("User logged in:", user.id);
+ **    Print.add("User details object:", user); // Object is stringified
  **
- **     // Log with a message and two values (both objects are stringified)
- **     Print("User data snapshot:", user, details);
+ **    // Log with a message and two values (both objects are stringified)
+ **    // Note: Your current 'add' only supports one value after the message.
+ **    // If you need two, the 'add' method's signature would need adjustment.
+ **    // For now, I've kept it to one value.
+ **    // Example if 'add' was extended: Print.add("User data snapshot:", user, details);
  *
- * 4. Viewing the Logs (Print.log())
- * The data logged via the callable function is stored internally in an 
- * array until you explicitly call the .log() method. This method outputs 
- * the collected data using console.table and then clears the internal data 
- * store.
+ * 4. Viewing the Logs (Print()) and Writing to File (Print.log())
+ * The data logged via Print.add() is stored internally.
+ * Call Print() to display to console.table and clear the internal data store.
+ * Call Print.log() to write to a log file and clear the internal data store.
  * 
- **     // After logging the above messages:
- **     Print.log();
+ **    // After logging the above messages:
+ **    Print(); // Displays to console.table
+ **    Print.log(); // Writes to file
  *
- * When Print.log() is called, your console will display a formatted table 
+ * When Print() is called, your console will display a formatted table 
  * similar to this:
  * 
- **     (index)     message	                            value	                                    Value2
- **     0	        Application starting up.		
- **     1	        User logged in:	101	
- **     2	        User details object:	            {"id":101,"name":"Alice","active":true}	
- **     3	        User data snapshot:	                {"id":101,"name":"Alice","active":true}     {"loginCount":42,"lastLogin":"2025-12-08T..."}
+ **    (index)     message                                      value                                             Value2
+ **    0           Application starting up.             
+ **    1           User logged in: 101 
+ **    2           User details object:                         {"id":101,"name":"Alice","active":true} 
+ **    3           User data snapshot:                          {"id":101,"name":"Alice","active":true}      {"loginCount":42,"lastLogin":"2025-12-08T..."}
  *
  * 5. Accessing the Raw Data (Print.data) 
  * You can directly access the raw array of logged objects via the .data 
  * property. You can read from it or assign an entirely new array to it.
  * 
- **     // Read the current data array
- **     console.log(Print.data.length + " entries currently pending log.");
+ **    //Read the current data array
+ **    console.log(Print.data.length + " entries currently pending log.");
  **
- **     // Clear the data manually without logging
- **     Print.data = [];
+ **    // Clear the data manually without logging
+ **    Print.data = [];
  *
+ * 6. Toggling Print (Print.on(), Print.off())
+ * You can enable or disable the print utility globally.
+ * 
+ **    Print.off(); // Disable all printing
+ **    Print.add("This message will not be added or displayed.");
+ **    Print(); // Will say "No information..." or do nothing if no data was collected before turning off
+ **    Print.log(); // Will not write to file
+ **    Print.on();  // Enable printing again
+ **    Print.add("This message will be added and can be displayed.");
+ * 
  */
 
+/**
+ * Interface defining the structure of logged data based on the types 
+ * and presence of arguments.
+ */
 interface PrintEntry {
-    message: string;
+    /**
+     * Optional message string to include in the log entry
+     */
+    message?: string;
+
+    /**
+     * Optional value (objects are JSON.stringified)
+     */
     value?: any;
 }
 
@@ -78,11 +107,12 @@ interface PrintEntry {
 interface PrintInstance {
     /**
      * Callable function signature for logging messages and values.
-     * @param message - Optional message to log
-     * @param value - Optional first value (can be any type)
-     * @param value2 - Optional second value (can be any type)
+     * 
+     * @param args:
+     *      @param message - Optional message to log
+     *      @param value   - Optional value (can be any type)
      */
-    add(message?: string, value?: any, value2?: any): void;
+    add(...args: any[]): void;
 
     /**
      * Array storing all logged entries until log() is called.
@@ -94,6 +124,21 @@ interface PrintInstance {
      * Outputs all accumulated log entries to log file and clears the data array.
      */
     log(): void;
+
+    /**
+     * Enables the Print utility.
+     */
+    on(): void;
+
+    /**
+     * Disables the Print utility.
+     */
+    off(): void;
+
+    /**
+     * Reset internal data array.
+     */
+    reset(): void;
 
     /**
      * Outputs all accumulated log entries to console.table and clears the data array.
@@ -112,18 +157,21 @@ const createPrintInstance = (): PrintInstance => {
      * Internal array storing log entries.
      * Each entry is an object with message, value, and/or Value2 properties.
      */
-    let internalData: PrintEntry[] = [];
+    const internalData: PrintEntry[] = [];
+    let isEnabled = true; // State to track if printing is on or off
 
     /**
-     * Attach the log method to the callable function.
+     * Attach the console.table method to the callable Print() function.
      * Outputs the accumulated data to console.table and clears the internal array.
      */
     const callableFunction = () => {
+        if (!isEnabled) return; // Do nothing if turned off
+
         if (internalData.length > 0) {
             // Display all log entries in a formatted table
             console.table(internalData);
             // Clear the internal data after displaying
-            internalData = [];
+            callableFunction.reset();
         } else {
             // Inform the user that there's no data to display
             console.log("No information is currently loaded into the table.");
@@ -137,30 +185,34 @@ const createPrintInstance = (): PrintInstance => {
      * @param message - Optional message string to include in the log entry
      * @param value - Optional first value (objects are JSON.stringified)
      */
-    callableFunction.add = (message: string, value?: any): void => {
+    callableFunction.add = (...args: any[]): void => {
+        if (!isEnabled) return; // Do nothing if turned off
+
+        const [currentMessage, currentValue] = [...args];
+
         // Not needed, but just in case
-        if (!message && message !== '') {
+        if (currentMessage === undefined && currentMessage !== '') {
             throw new SyntaxError('Print.add() utility expects a message string.');
         }
 
         // Case 1: No values provided, only message
-        if (value === undefined) {
+        if (currentValue === undefined) {
             internalData.push({
-                message: message,
+                message: currentMessage,
             });
         }
         // Case 2: Single object value provided
-        else if (value !== null && typeof value === "object") {
+        else if (currentValue !== null && typeof currentValue === "object") {
             internalData.push({
-                message: message,
-                value: JSON.stringify(value),
+                message: currentMessage,
+                value: JSON.stringify(currentValue),
             });
         }
         // Case 3: Single primitive value
         else {
             internalData.push({
-                message: message,
-                value: value,
+                message: currentMessage,
+                value: currentValue,
             });
         }
     };
@@ -169,13 +221,13 @@ const createPrintInstance = (): PrintInstance => {
      * Outputs all accumulated log entries to log file and clears the data array.
      */
     callableFunction.log = (): void => {
+        if (!isEnabled) return; // Do nothing if turned off
+
+        console.log("INTERNALDATA.LENGTH:", internalData.length);
         if (internalData.length === 0) {
             console.log("No information is currently loaded into the table.");
             return;
         }
-
-        const fs = require("fs");
-        const path = require("path");
 
         // Create date string YYYY-MM-DD
         const today = new Date();
@@ -206,7 +258,31 @@ const createPrintInstance = (): PrintInstance => {
         console.log(`Wrote ${internalData.length} entries to ${logFile}`);
 
         // Clear internal data after writing
-        internalData = [];
+        callableFunction.reset();
+    };
+
+    /**
+     * Enables the Print utility.
+     */
+    callableFunction.on = (): void => {
+        isEnabled = true;
+        console.log("Print() utility is ON.");
+    };
+
+    /**
+     * Disables the Print utility.
+     */
+    callableFunction.off = (): void => {
+        isEnabled = false;
+        console.log("Print() utility is OFF.");
+    };
+
+    /**
+     * Reset the internal data array
+     */
+    callableFunction.reset = (): void => {
+        internalData.length = 0;
+        console.log("Print() utility internal data cleared.");
     };
 
     /**
@@ -225,7 +301,8 @@ const createPrintInstance = (): PrintInstance => {
          * @param newData - The new array to set as internal data
          */
         set(newData: any[]) {
-            internalData = newData;
+            internalData.length = 0;
+            internalData.push(...newData);
         },
         enumerable: true,
         configurable: true,
@@ -237,16 +314,23 @@ const createPrintInstance = (): PrintInstance => {
 
 /**
  * The singleton Print instance, ready to use throughout your application.
- * Import and use this instance for structured logging.
  * 
  * @example
  * ```typescript
- * import Print from './Print';
+ * import { Print } from './Print';
  * 
+ * Print.on(); // Ensure printing is enabled
  * Print.add("Starting process");
  * Print.add("User ID:", 123);
+ * 
+ * Print.off(); // Disable printing
+ * Print.add("This will not be logged because Print is off"); // This call does nothing
+ * 
+ * Print.on(); // Re-enable printing
  * Print.add("User data:", { name: "Alice", age: 30 });
- * Print(); // Displays all entries in console.table
+ * 
+ * Print(); // Displays "Starting process", "User ID: 123", and "User data: {name...}" to console.table
+ * Print.log(); // Writes the same to the log file.
  * ```
  */
 export const Print: PrintInstance = createPrintInstance();

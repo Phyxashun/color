@@ -4,6 +4,10 @@
     "compilerOptions": {
         // File Layout
         "rootDir": "./",
+        "types": [
+            "node",
+            "vitest/globals"
+        ],
         // Environment Settings
         "module": "esnext",
         "target": "esnext",
@@ -32,14 +36,14 @@
     "include": [
         "./index.ts",
         "./globals.d.ts",
-        "src/**/*.ts",
+        "src/**/*.ts", // This already includes your source and test files
         "src/types/**/*.d.ts",
+        "src/BorrowedTokenizer.js"
     ],
     "exclude": [
         ".vscode",
         "node_modules",
         "coverage",
-        "test",
         ".gitignore",
         "src/{OLD}*.ts"
     ]
