@@ -38,7 +38,7 @@
         "./globals.d.ts",
         "src/**/*.ts", // This already includes your source and test files
         "src/types/**/*.d.ts",
-        "src/BorrowedTokenizer.js"
+        "src/refs/BorrowedTokenizer.js"
     ],
     "exclude": [
         ".vscode",

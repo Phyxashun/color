@@ -1,52 +1,67 @@
 // /src/types/Tokenizer.d.ts
 
-declare enum TokenType {
-    FUNCTION = 'FUNCTION',
-    NAMEDCOLOR = 'NAMEDCOLOR',
-    KEYWORD = 'KEYWORD',
-    IDENTIFIER = 'IDENTIFIER',
-    HEXVALUE = 'HEXVALUE',
-    NUMBER = 'NUMBER',
-    PERCENT = 'PERCENT',
-    UNITS = 'UNITS',
-    COMMA = 'COMMA',
-    SLASH = 'SLASH',
-    LPAREN = 'LPAREN',
-    RPAREN = 'RPAREN',
-    DELIMITER = 'DELIMITER',
+/*
+    From espree.js
+*/
+declare enum NewTokenTypes {
     WHITESPACE = 'WHITESPACE',
+    IDENTIFIER = 'IDENTIFIER',
+    STRING = 'STRING',
+    NUMERIC = 'NUMERIC',
+    DELIMITER = 'DELIMITER',
     CHAR = 'CHAR',
-    EOF = 'EOF'
+    EOF = '<end>',
 }
 
-interface TokenNode<T extends TokenType> {
-    type: T;
+declare enum TokenType {
+    FUNCTION = 'FUNCTION',      // Identifier
+    NAMEDCOLOR = 'NAMEDCOLOR',  // Identifier
+    KEYWORD = 'KEYWORD',        // Identifier
+    IDENTIFIER = 'IDENTIFIER',  // Identifier
+    HEXVALUE = 'HEXVALUE',      // StringLiteral
+    NUMBER = 'NUMBER',          // NumericLiteral
+    PERCENT = 'PERCENT',        // NumericLiteral...with units
+    ANGLE = 'ANGLE',            // NumericLiteral...with units
+    COMMA = 'COMMA',            // Delimiter
+    SLASH = 'SLASH',            // Delimiter
+    LPAREN = 'LPAREN',          // Delimiter
+    RPAREN = 'RPAREN',          // Delimiter
+    DELIMITER = 'DELIMITER',    // Delimiter
+    WHITESPACE = 'WHITESPACE',  // Whitespace...Ignored
+    CHAR = 'CHAR',              // CharacterLiteral...Any single character to already captured
+    EOF = 'EOF'               // End of File/Line
 }
+
+type TokenNode<T extends TokenType> = { type: T; }
 
 interface TokenValueNode<T extends TokenType> extends TokenNode<T> {
     value: string;
 }
 
+interface StartEndNode<T extends TokenType> extends TokenNode<T>, TokenValueNode<T> {
+    start: number;
+    end: number;
+}
+
 type Token =
     | TokenNode<TokenType.WHITESPACE>
-    | TokenValueNode<TokenType.FUNCTION>
-    | TokenValueNode<TokenType.NAMEDCOLOR>
-    | TokenValueNode<TokenType.KEYWORD>
-    | TokenNode<TokenType.LPAREN>
-    | TokenNode<TokenType.RPAREN>
-    | TokenNode<TokenType.COMMA>
-    | TokenNode<TokenType.SLASH>
-    | TokenValueNode<TokenType.UNITS>
-    | TokenValueNode<TokenType.PERCENT>
-    | TokenValueNode<TokenType.NUMBER>
-    | TokenValueNode<TokenType.HEXVALUE>
-    | TokenValueNode<TokenType.DELIMITER>
-    | TokenValueNode<TokenType.CHAR>
-    | TokenValueNode<TokenType.IDENTIFIER>
-    | TokenNode<TokenType.EOF>
+    | StartEndNode<TokenType.FUNCTION>
+    | StartEndNode<TokenType.NAMEDCOLOR>
+    | StartEndNode<TokenType.KEYWORD>
+    | StartEndNode<TokenType.LPAREN>
+    | StartEndNode<TokenType.RPAREN>
+    | StartEndNode<TokenType.COMMA>
+    | StartEndNode<TokenType.SLASH>
+    | StartEndNode<TokenType.ANGLE>
+    | StartEndNode<TokenType.PERCENT>
+    | StartEndNode<TokenType.NUMBER>
+    | StartEndNode<TokenType.HEXVALUE>
+    | StartEndNode<TokenType.DELIMITER>
+    | StartEndNode<TokenType.CHAR>
+    | StartEndNode<TokenType.IDENTIFIER>
+    | TokenValueNode<TokenType.EOF>
 
 type TokenSpecTuple = [TokenType, RegExp];
-
 type TokenSpec = TokenSpecTuple[];
 
 declare class Tokenizer {

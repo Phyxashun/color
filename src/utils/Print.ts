@@ -266,7 +266,6 @@ const createPrintInstance = (): PrintInstance => {
      */
     callableFunction.on = (): void => {
         isEnabled = true;
-        console.log("Print() utility is ON.");
     };
 
     /**
@@ -274,7 +273,6 @@ const createPrintInstance = (): PrintInstance => {
      */
     callableFunction.off = (): void => {
         isEnabled = false;
-        console.log("Print() utility is OFF.");
     };
 
     /**
@@ -282,7 +280,6 @@ const createPrintInstance = (): PrintInstance => {
      */
     callableFunction.reset = (): void => {
         internalData.length = 0;
-        console.log("Print() utility internal data cleared.");
     };
 
     /**

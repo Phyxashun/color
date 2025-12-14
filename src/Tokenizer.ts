@@ -18,11 +18,10 @@ export enum TokenType {
     KEYWORD = 'KEYWORD',             // For specific keywords like 'display-p3'
     NAMEDCOLOR = 'NAMEDCOLOR',       // For CSS named colors like 'red', 'transparent'
     IDENTIFIER = 'IDENTIFIER',       // Any word/letter not already captured 
-    ////HASH = 'HASH',                 // '#'...Removed as HEXVALUE captures it
     HEXVALUE = 'HEXVALUE',           // '#fff', '#ffff', '#ffffff', '#ffffffff'
     NUMBER = 'NUMBER',               // '127', '120', '80'
     PERCENT = 'PERCENT',             // '80%'
-    UNITS = 'UNITS',                 // 'deg', 'rad', 'grad', 'turn'
+    ANGLE = 'ANGLE',                 // 'deg', 'rad', 'grad', 'turn'
     COMMA = 'COMMA',                 // ',' (for older syntax)
     SLASH = 'SLASH',                 // '/' (for modern syntax)
     LPAREN = 'LPAREN',               // '('
@@ -38,17 +37,18 @@ const createTokenSpec = (): TokenSpec => {
     // Generate a dynamic regex for all named colors.
     // This is far more efficient than looping through an object later.
     const colorNames = Object.keys(Colors);
-    const namedColorRegex = new RegExp(`^(${colorNames.join('|')})\\b`, 'i');
+    const namedColorRegexStr = `^(${colorNames.join('|')})\\b`;
 
     const keywords = Object.keys(Keywords);
-    const keywordRegex = new RegExp(`^(${keywords.join('|')})\\b`, 'i');
+    const keywordRegexStr = `^(${keywords.join('|')})\\b`;
+    const keywordRegex = new RegExp(namedColorRegexStr + '|' + keywordRegexStr, 'i');
 
     return [
         // Whitespace (to be ignored)
         [TokenType.WHITESPACE, /^\s+/],
 
         // Named colors (must come before IDENTIFIER)
-        [TokenType.NAMEDCOLOR, namedColorRegex],
+        //[TokenType.NAMEDCOLOR, namedColorRegex],
 
         // Keywords (must come before IDENTIFIER)
         [TokenType.KEYWORD, keywordRegex],
@@ -63,7 +63,7 @@ const createTokenSpec = (): TokenSpec => {
         [TokenType.SLASH, /^\//],
 
         // Units (must come before IDENTIFIER)
-        [TokenType.UNITS, /^(deg|grad|rad|turn)\b/i],
+        [TokenType.ANGLE, /^(deg|grad|rad|turn)\b/i],
 
         // Percentage (must come before NUMBER)
         [TokenType.PERCENT, /^-?\d*\.?\d+%/],
@@ -78,7 +78,7 @@ const createTokenSpec = (): TokenSpec => {
         [TokenType.IDENTIFIER, /^[-\w][a-z_][a-z\d_-]*/i],
 
         // Fallback to catch any character not matched. This indicates an error.
-        [TokenType.DELIMITER, /[;\-]+/],
+        [TokenType.DELIMITER, /\=[;\-]+/],
 
         // Fallback to catch any character not matched. This indicates an error.
         [TokenType.CHAR, /^./],
@@ -87,6 +87,7 @@ const createTokenSpec = (): TokenSpec => {
 
 // Create the token specification
 export const TokenSpec: TokenSpec = createTokenSpec();
+export const EOF_TOKEN: Token = { type: TokenType.EOF, value: '<end>' };
 
 export default class Tokenizer {
     private readonly source: string = '';
@@ -109,17 +110,12 @@ export default class Tokenizer {
         Print();
     }
 
-    // Returns true if the cursor is at the end of source.
-    private isEOF() {
-        return this.cursor >= this.source.length;
-    }
-
     /**
      * @returns The current token without consuming it.
      */
     public current(): Token {
         if (this.tokenIndex >= this.tokens.length) {
-            return { type: TokenType.EOF } as Token;
+            return EOF_TOKEN;
         }
         return this.tokens[this.tokenIndex];
     }
@@ -160,6 +156,32 @@ export default class Tokenizer {
         return this.tokens[index];
     }
 
+    /**
+     * Makes the tokenizer iterable over its tokens.
+     * Usage: for (const token of tokenizer) { ... }
+     */
+    public *[Symbol.iterator](): Iterator<Token> {
+        for (const token of this.tokens) {
+            yield token;
+        }
+    }
+
+    /**
+     * Returns a formatted string representation of all tokens.
+     * @returns String in format "Token: [token1, token2, ...]"
+     */
+    public toString(): string {
+        return this.tokens
+            .map(token => `Token ${JSON.stringify(token)}`)
+            .join('\n');
+    }
+
+
+    // Returns true if the cursor is at the end of source.
+    private isEOF() {
+        return this.cursor >= this.source.length;
+    }
+
     private _tokenize(): Token[] {
         Print.add('2. Tokenizer - tokenize()');
         const tokens: Token[] = [];
@@ -176,6 +198,8 @@ export default class Tokenizer {
 
                 if (match) {
                     const value = match[0];
+                    const tokenStart = this.cursor;
+                    const tokenEnd = this.cursor + value.length;
 
                     // Critical: If CHAR is matched, it's an unrecognized token.
                     if (tokenType === TokenType.CHAR) {
@@ -185,18 +209,33 @@ export default class Tokenizer {
 
                     // Skip whitespace tokens in the final list for the parser
                     if (tokenType !== TokenType.WHITESPACE) {
+
+                        //* This is where tokens are created for each token type
+                        //* and we can inject changes, for example delimiters:
+                        /*
                         // These token types do not require a value property
                         if (tokenType === TokenType.LPAREN
                             || tokenType === TokenType.RPAREN
                             || tokenType === TokenType.COMMA
                             || tokenType === TokenType.SLASH
                         ) {
-                            // Create tokens for TokenNodes
-                            tokens.push({ type: tokenType });
-                        } else {
-                            // Create tokens for everything else (TokenValueNodes)
-                            tokens.push({ type: tokenType, value: match[0] });
+                            // Create tokens for TokenNodes (with position tracking)
+                            tokens.push({
+                                type: tokenType,
+                                start: tokenStart,
+                                end: tokenEnd
+                            });
                         }
+                        //*/
+
+                        // Create tokens for everything else (TokenValueNodes)
+                        tokens.push({
+                            type: tokenType,
+                            value: match[0],
+                            start: tokenStart,
+                            end: tokenEnd,
+
+                        });
                     }
 
                     // Advance cursor by the length of the matched value
@@ -215,7 +254,7 @@ export default class Tokenizer {
             }
         }
 
-        tokens.push({ type: TokenType.EOF });
+        tokens.push(EOF_TOKEN);
 
         for (const token of tokens) {
             Print.add('2.B. Tokenizer - tokens:', token);

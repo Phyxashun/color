@@ -19,6 +19,210 @@
 # type: LPAREN
 # type: EOF
 #--------------------------------------
+CONSIDER: From espree.js:
+
+// Esprima Token Types
+const Token = {
+    Boolean: "Boolean",
+    EOF: "<end>",
+    Identifier: "Identifier",
+    PrivateIdentifier: "PrivateIdentifier",
+    Keyword: "Keyword",
+    Null: "Null",
+    Numeric: "Numeric",
+    Punctuator: "Punctuator",
+    String: "String",
+    RegularExpression: "RegularExpression",
+    Template: "Template",
+    JSXIdentifier: "JSXIdentifier",
+    JSXText: "JSXText"
+};
+
+Token { type: 'Identifier', value: 'rgba', start: 0, end: 4 }
+Token { type: 'Punctuator', value: '(', start: 4, end: 5 }
+Token { type: 'Numeric', value: '100', start: 5, end: 8 }
+Token { type: 'Punctuator', value: ',', start: 8, end: 9 }
+Token { type: 'Numeric', value: '255', start: 10, end: 13 }
+Token { type: 'Punctuator', value: ',', start: 13, end: 14 }
+Token { type: 'Numeric', value: '50', start: 15, end: 17 }
+Token { type: 'Punctuator', value: ',', start: 17, end: 18 }
+Token { type: 'Numeric', value: '0.5', start: 19, end: 22 }
+Token { type: 'Punctuator', value: ')', start: 22, end: 23 }
+
+
+CONSIDER: From acorn.js:
+
+Token {
+  type: TokenType {
+    label: 'name',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: [Function (anonymous)]
+  },
+  value: 'rgba',
+  start: 0,
+  end: 4
+}
+Token {
+  type: TokenType {
+    label: '(',
+    keyword: undefined,
+    beforeExpr: true,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: [Function (anonymous)]
+  },
+  value: undefined,
+  start: 4,
+  end: 5
+}
+Token {
+  type: TokenType {
+    label: 'num',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: 100,
+  start: 5,
+  end: 8
+}
+Token {
+  type: TokenType {
+    label: ',',
+    keyword: undefined,
+    beforeExpr: true,
+    startsExpr: false,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: undefined,
+  start: 8,
+  end: 9
+}
+Token {
+  type: TokenType {
+    label: 'num',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: 255,
+  start: 10,
+  end: 13
+}
+Token {
+  type: TokenType {
+    label: ',',
+    keyword: undefined,
+    beforeExpr: true,
+    startsExpr: false,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: undefined,
+  start: 13,
+  end: 14
+}
+Token {
+  type: TokenType {
+    label: 'num',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: 50,
+  start: 15,
+  end: 17
+}
+Token {
+  type: TokenType {
+    label: ',',
+    keyword: undefined,
+    beforeExpr: true,
+    startsExpr: false,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: undefined,
+  start: 17,
+  end: 18
+}
+Token {
+  type: TokenType {
+    label: 'num',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: true,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: null
+  },
+  value: 0.5,
+  start: 19,
+  end: 22
+}
+Token {
+  type: TokenType {
+    label: ')',
+    keyword: undefined,
+    beforeExpr: false,
+    startsExpr: false,
+    isLoop: false,
+    isAssign: false,
+    prefix: false,
+    postfix: false,
+    binop: null,
+    updateContext: [Function (anonymous)]
+  },
+  value: undefined,
+  start: 22,
+  end: 23
+}
+
 ----------------------------------------------------------------------------------
 * CSS COLOR STRING GRAMMAR:
 ----------------------------------------------------------------------------------
@@ -136,6 +340,107 @@ Each node generally has a type attribute, may contain child nodes representing n
 elements, and includes metadata such as line and column numbers to relate the node back 
 to the original source code. 
 
+//*-------------------------------------------------------------------------------
+
+EXAMPLE AST (from token example above):
+
+Node {
+    type: 'Program',
+    start: 0,
+    end: 23,
+    body: [
+        Node {
+            type: 'ExpressionStatement',
+            start: 0,
+            end: 23,
+            expression: Node {
+                type: 'CallExpression',
+                start: 0,
+                end: 23,
+                callee: Node { type: 'Identifier', start: 0, end: 4, name: 'rgba' },
+                arguments: [
+                    Node {
+                        type: 'Literal',
+                        start: 5,
+                        end: 8,
+                        value: 100,
+                        raw: '100'
+                    },
+                    Node {
+                        type: 'Literal',
+                        start: 10,
+                        end: 13,
+                        value: 255,
+                        raw: '255'
+                    },
+                    Node {
+                        type: 'Literal',
+                        start: 15,
+                        end: 17,
+                        value: 50,
+                        raw: '50'
+                    },
+                    Node {
+                        type: 'Literal',
+                        start: 19,
+                        end: 22,
+                        value: 0.5,
+                        raw: '0.5'
+                    }
+                ],
+                optional: false
+            }
+        }
+    ],
+    sourceType: 'script'
+}
+//*-------------------------------------------------------------------------------
+
+Literal
+
+A Literal node represents a literal value in JavaScript. Literal values are:
+
+    Boolean values - true and false
+    Numeric values such as 1 and 10.0
+    String values such as "foo"
+    Regular expressions such as /foo/g.
+
+Literal AST nodes have the following properties:
+
+    type - always "Literal"
+    value - the JavaScript representation of the literal if it's possible to create. For instance, this will be a JavaScript number if the literal represents a number, a regular expression if the literal represents a regular expression and the current engine can properly create the regular expression object, and so on.
+    regex - only present for regular expression literals and has the following properties:
+        pattern - the regular expression pattern.
+        flags - any flags applied to the pattern.
+
+Note: The regex property is a custom property and is not present in the SpiderMonkey Parser API.
+
+Additionally, literal AST nodes have all the standard properties of nodes. Here's a complete example:
+
+{
+    "range": [
+        10,
+        16
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 10
+        },
+        "end": {
+            "line": 1,
+            "column": 16
+        }
+    },
+    "type": "Literal",
+    "value": null,
+    "regex": {
+        "pattern": "foo",
+        "flags": "y"
+    },
+    "raw": "/foo/y"
+}
+
 */
 
 declare enum TokenType {
@@ -200,6 +505,8 @@ declare type ASTNode =
 
 declare interface BaseNode<T extends NodeType | TokenType | ColorModel> {
     type: T;
+    start: number;
+    end: number;
 }
 
 declare interface ChildrenNode<T extends NodeType | TokenType | ColorModel> extends BaseNode<T> {

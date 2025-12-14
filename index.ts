@@ -1,3 +1,43 @@
+import * as espree from 'espree';
+import Tokenizer from './src/Tokenizer';
+import { ConsoleColors } from './src/Colors.ts'
+import util from 'util';
+
+const CC = ConsoleColors;
+const star = '*';
+const times = 90;
+
+const options = {
+    depth: null,
+    colors: true,
+    maxArrayLength: null,
+};
+
+const codeArray = [
+    `rgba(100, 255, 50, 0.5)`,
+    `darkgoldenrod`,
+]
+
+for (const code of codeArray) {
+    const myTokenizer = new Tokenizer(code);
+    
+    console.log(`\n${star.repeat(times)}\n\n`);
+
+    console.log(`${CC.blue}espree.tokenize:${CC.reset}\n`);
+    for (const token of espree.tokenize(code, { ecmaVersion: 'latest' })) {
+        console.log(util.inspect(token, options));
+    }
+
+    console.log(`\n\n${star.repeat(times)}\n\n`);
+
+    console.log(`${CC.red}myTokenizer:${CC.reset}\n`);
+    for (const token of myTokenizer) {
+        console.log(`Token ${util.inspect(token, options)}`);
+    }
+    
+    console.log(`\n\n${star.repeat(times)}\n`);
+}
+
 // /// <reference path='globals.d.ts' />
 // // index.ts
 
